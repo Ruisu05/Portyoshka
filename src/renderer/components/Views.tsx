@@ -83,7 +83,11 @@ export function CatalogView() {
               {busy && (
                 <div className="progress-block">
                   <div className="progress-stage">
-                    {progress?.stage === 'downloading' ? 'Downloading…' : 'Installing…'}
+                    {progress?.stage === 'queued' && 'Waiting in queue…'}
+                    {progress?.stage === 'downloading' && 'Downloading…'}
+                    {progress?.stage === 'extracting' && 'Extracting…'}
+                    {progress?.stage === 'finalizing' && 'Finalizing…'}
+                    {progress?.stage === 'checking-release' && 'Checking release…'}
                   </div>
                   <div className="progress-bar">
                     <div

@@ -32,8 +32,15 @@ export interface IpcDeps {
   getHomeDir: () => string;
 }
 
+interface QueuedInstall {
+  portId: string;
+  controller: AbortController;
+  resolve: (result: IpcResult<null>) => void;
+}
+
 export function registerIpc(deps: IpcDeps): void {
-  const installs = new Map<string, AbortController>();
+  const installQueue: QueuedInstall[] = [];
+  let currentInstall: QueuedInstall | null = null;
   let updateResults: UpdateCheckResult[] = [];
 
   const emit = (event: MainEvent) => {
@@ -57,6 +64,48 @@ export function registerIpc(deps: IpcDeps): void {
     const appErr = asAppError(err, 'UNKNOWN', 'Something went wrong');
     return { ok: false, error: { code: appErr.code, message: appErr.message, detail: appErr.detail } };
   };
+
+  const installDeps = () => ({
+    platform: deps.platform,
+    paths: deps.paths,
+    db: deps.db,
+    getRootInstallDir: () => deps.settings.getRootInstallDir(),
+    getPortDirOverride: (id: string) => deps.settings.getPortDirOverride(id),
+    getGithubToken: () => deps.settings.getGithubToken(),
+    emit: (progress: InstallProgress) => {
+      emit({ type: 'install-progress', progress });
+    },
+  });
+
+  const runInstall = async (item: QueuedInstall): Promise<void> => {
+    try {
+      await installPort(installDeps(), item.portId, item.controller.signal);
+      updateResults = updateResults.map((r) =>
+        r.portId === item.portId ? { ...r, installedVersion: r.latestVersion, hasUpdate: false } : r,
+      );
+      item.resolve(ok(null));
+    } catch (err) {
+      item.resolve(fail(err));
+    }
+  };
+
+  const pumpInstallQueue = (): void => {
+    if (currentInstall) {
+      return;
+    }
+    const next = installQueue.shift();
+    if (!next) {
+      return;
+    }
+    currentInstall = next;
+    void runInstall(next).finally(() => {
+      currentInstall = null;
+      pumpInstallQueue();
+    });
+  };
+
+  const isInstallBusy = (portId: string): boolean =>
+    currentInstall?.portId === portId || installQueue.some((item) => item.portId === portId);
 
   ipcMain.handle('library:get', async (): Promise<IpcResult<LibraryEntry[]>> => {
     try {
@@ -91,41 +140,31 @@ export function registerIpc(deps: IpcDeps): void {
   });
 
   ipcMain.handle('install:start', async (_event, portId: string): Promise<IpcResult<null>> => {
-    if (installs.has(portId)) {
+    if (isInstallBusy(portId)) {
       return fail(new AppError('INSTALL_BUSY', 'An install for this port is already running'));
     }
-    const controller = new AbortController();
-    installs.set(portId, controller);
-    const onProgress = (progress: InstallProgress) => {
-      emit({ type: 'install-progress', progress });
-    };
-    try {
-      await installPort(
-        {
-          platform: deps.platform,
-          paths: deps.paths,
-          db: deps.db,
-          getRootInstallDir: () => deps.settings.getRootInstallDir(),
-          getPortDirOverride: (id) => deps.settings.getPortDirOverride(id),
-          getGithubToken: () => deps.settings.getGithubToken(),
-          emit: onProgress,
-        },
-        portId,
-        controller.signal,
-      );
-      updateResults = updateResults.map((r) =>
-        r.portId === portId ? { ...r, installedVersion: r.latestVersion, hasUpdate: false } : r,
-      );
-      return ok(null);
-    } catch (err) {
-      return fail(err);
-    } finally {
-      installs.delete(portId);
-    }
+    return new Promise((resolve) => {
+      installQueue.push({ portId, controller: new AbortController(), resolve });
+      if (currentInstall || installQueue.length > 1) {
+        emit({
+          type: 'install-progress',
+          progress: { portId, stage: 'queued', percent: 0, downloadedBytes: 0, totalBytes: 0 },
+        });
+      }
+      pumpInstallQueue();
+    });
   });
 
   ipcMain.handle('install:cancel', async (_event, portId: string): Promise<IpcResult<null>> => {
-    installs.get(portId)?.abort();
+    if (currentInstall?.portId === portId) {
+      currentInstall.controller.abort();
+      return ok(null);
+    }
+    const index = installQueue.findIndex((item) => item.portId === portId);
+    if (index >= 0) {
+      const [removed] = installQueue.splice(index, 1);
+      removed.resolve(fail(new AppError('CANCELLED', 'Install cancelled')));
+    }
     return ok(null);
   });
 
@@ -251,7 +290,7 @@ export function registerIpc(deps: IpcDeps): void {
         if (deps.launchManager.isRunning(portId)) {
           return fail(new AppError('ALREADY_RUNNING', 'Stop the game before uninstalling it'));
         }
-        if (installs.has(portId)) {
+        if (isInstallBusy(portId)) {
           return fail(new AppError('INSTALL_BUSY', 'Wait for the current install to finish first'));
         }
         const port = getEntryPort(portId);

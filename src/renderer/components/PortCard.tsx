@@ -116,6 +116,7 @@ export function PortCard({ entry }: { entry: LibraryEntry }) {
       {progress && busy && (
         <div className="progress-block">
           <div className="progress-stage">
+            {progress.stage === 'queued' && 'Waiting in queue…'}
             {progress.stage === 'downloading' && 'Downloading…'}
             {progress.stage === 'extracting' && 'Extracting…'}
             {progress.stage === 'finalizing' && 'Finalizing…'}

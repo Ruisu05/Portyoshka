@@ -43,6 +43,7 @@ export interface ReleaseInfo {
 }
 
 export type InstallStage =
+  | 'queued'
   | 'checking-release'
   | 'downloading'
   | 'extracting'
