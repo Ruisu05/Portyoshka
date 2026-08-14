@@ -49,7 +49,7 @@ Notes:
 
 ## Architecture
 
-See `AGENTS.md` for a full developer guide. The short version:
+The short version:
 
 - IPC contract: `PortyoshkaApi` + `MainEvent` in `src/shared/types.ts` → handlers in `src/main/ipc.ts` → preload bridge in `src/preload.ts` → consumed via `window.portyoshka`.
 - Database: `node:sqlite` (WAL, foreign keys on), migrations are an append-only array.
