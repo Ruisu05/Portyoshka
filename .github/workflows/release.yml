@@ -15,8 +15,10 @@ jobs:
         include:
           - os: ubuntu-latest
             name: linux
+            make-path: out/make/deb/* out/make/rpm/*
           - os: windows-latest
             name: windows
+            make-path: out/make/squirrel.windows/*
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -32,8 +34,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.name }}
-          path: |
-            out/make/*
+          path: ${{ matrix.make-path }}
 
   release:
     needs: build
