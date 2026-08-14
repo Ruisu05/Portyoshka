@@ -15,10 +15,12 @@ jobs:
         include:
           - os: ubuntu-latest
             name: linux
-            make-path: out/make/deb/* out/make/rpm/*
+            make-path: |
+              out/make/deb/*
+              out/make/rpm/*
           - os: windows-latest
             name: windows
-            make-path: out/make/squirrel.windows/*
+            make-path: out/make/squirrel.windows/x64/*
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +37,7 @@ jobs:
         with:
           name: build-${{ matrix.name }}
           path: ${{ matrix.make-path }}
+          if-no-files-found: error
 
   release:
     needs: build
