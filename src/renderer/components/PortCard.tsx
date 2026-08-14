@@ -1,0 +1,193 @@
+import type { LibraryEntry } from '../../shared/types';
+import { useStore } from '../store';
+import { iconUrl } from '../icons';
+
+function initials(name: string): string {
+  const words = name.replace(/[^a-zA-Z0-9 ]/g, '').split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '?';
+  return words
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('');
+}
+
+function statusLabel(entry: LibraryEntry): string {
+  if (!entry.installed) return 'Not installed';
+  if (entry.running) return 'Running';
+  if (entry.updateAvailable) return `Installed ${entry.installed.version} — update ${entry.latestVersion} available`;
+  return `Installed ${entry.installed.version}`;
+}
+
+function FolderIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+    </svg>
+  );
+}
+
+function GitHubIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14zM10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
+export function PortCard({ entry }: { entry: LibraryEntry }) {
+  const installs = useStore((s) => s.installs);
+  const busyInstalls = useStore((s) => s.busyInstalls);
+  const install = useStore((s) => s.install);
+  const cancelInstall = useStore((s) => s.cancelInstall);
+  const launch = useStore((s) => s.launch);
+  const stopLaunch = useStore((s) => s.stopLaunch);
+  const openRomPrompt = useStore((s) => s.openRomPrompt);
+  const toggleLog = useStore((s) => s.toggleLog);
+  const visibleLogs = useStore((s) => s.visibleLogs);
+  const showFolder = useStore((s) => s.showFolder);
+  const openRepo = useStore((s) => s.openRepo);
+  const openUninstallPrompt = useStore((s) => s.openUninstallPrompt);
+
+  const progress = installs[entry.port.id];
+  const busy = busyInstalls[entry.port.id];
+  const romMissing = entry.port.rom.required && !entry.romStatus.linked;
+  const running = entry.running;
+  const icon = iconUrl(entry.port.icon);
+
+  let primary: { label: string; action: () => void; kind: 'primary' | 'accent' | 'danger' };
+  if (running) {
+    primary = { label: 'Stop', action: () => void stopLaunch(entry.port.id), kind: 'danger' };
+  } else if (!entry.installed || progress?.stage === 'cancelled') {
+    primary = {
+      label: 'Install',
+      action: () => void install(entry.port.id),
+      kind: 'accent',
+    };
+  } else if (busy) {
+    primary = {
+      label: 'Cancel',
+      action: () => void cancelInstall(entry.port.id),
+      kind: 'danger',
+    };
+  } else if (entry.updateAvailable) {
+    primary = {
+      label: `Update to ${entry.latestVersion}`,
+      action: () => void install(entry.port.id),
+      kind: 'accent',
+    };
+  } else {
+    primary = { label: 'Play', action: () => void launch(entry.port.id), kind: 'primary' };
+  }
+
+  const percent =
+    progress && progress.totalBytes > 0 ? Math.min(100, Math.max(0, progress.percent)) : null;
+
+  return (
+    <div className="card">
+      <div className="card-top">
+        <div className="icon-tile">
+          {icon ? <img className="icon-img" src={icon} alt="" /> : initials(entry.port.displayName)}
+        </div>
+        <div className="card-info">
+          <div className="card-name">{entry.port.displayName}</div>
+          <div className={`card-status ${entry.updateAvailable ? 'status-update' : ''}`}>
+            {statusLabel(entry)}
+            {romMissing && !busy && !running && entry.installed && (
+              <span className="badge badge-warn">ROM not attached</span>
+            )}
+            {entry.romStatus.unverified && (
+              <span className="badge" title="No published hash list for this port yet">
+                ROM unverified
+              </span>
+            )}
+          </div>
+          {entry.port.description && <div className="card-desc">{entry.port.description}</div>}
+        </div>
+      </div>
+
+      {progress && busy && (
+        <div className="progress-block">
+          <div className="progress-stage">
+            {progress.stage === 'downloading' && 'Downloading…'}
+            {progress.stage === 'extracting' && 'Extracting…'}
+            {progress.stage === 'finalizing' && 'Finalizing…'}
+            {progress.stage === 'checking-release' && 'Checking release…'}
+          </div>
+          <div className="progress-bar">
+            <div
+              className={`progress-fill ${percent === null ? 'indeterminate' : ''}`}
+              style={percent !== null ? { width: `${percent}%` } : undefined}
+            />
+          </div>
+          {progress.stage === 'downloading' && progress.totalBytes > 0 && (
+            <div className="progress-bytes">
+              {(progress.downloadedBytes / 1048576).toFixed(1)} MB / {(progress.totalBytes / 1048576).toFixed(1)} MB
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="card-actions">
+        <button className={`btn btn-${primary.kind}`} onClick={primary.action}>
+          {primary.label}
+        </button>
+        {entry.installed && !busy && (
+          <button className="btn btn-ghost" onClick={() => toggleLog(entry.port.id)}>
+            {visibleLogs[entry.port.id] ? 'Hide output' : 'Output'}
+          </button>
+        )}
+        {romMissing && entry.installed && !busy && !running && (
+          <button className="btn btn-ghost" onClick={() => openRomPrompt(entry.port.id, false)}>
+            Attach ROM
+          </button>
+        )}
+        {!romMissing && entry.port.rom.required && entry.installed && !busy && !running && (
+          <button
+            className="btn btn-ghost"
+            title={`Current ROM: ${entry.romStatus.rom?.sourcePath ?? ''}`}
+            onClick={() => openRomPrompt(entry.port.id, false)}
+          >
+            Change ROM
+          </button>
+        )}
+        <div className="card-icon-actions">
+          {entry.installed && !busy && (
+            <>
+              <button
+                className="icon-btn"
+                title="Show folder"
+                onClick={() => void showFolder(entry.port.id)}
+              >
+                <FolderIcon />
+              </button>
+              <button
+                className="icon-btn"
+                title="Go to project"
+                onClick={() => void openRepo(entry.port.id)}
+              >
+                <GitHubIcon />
+              </button>
+              {!running && (
+                <button
+                  className="icon-btn icon-btn-danger"
+                  title="Uninstall"
+                  onClick={() => openUninstallPrompt(entry.port.id)}
+                >
+                  <TrashIcon />
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
