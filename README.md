@@ -22,7 +22,7 @@ Built with Electron, React, TypeScript, and Zustand.
 | [Starship](https://github.com/HarbourMasters/Starship) | Star Fox 64 | US 1.0 / 1.1 SF64 ROM |
 | [Spaghetti Kart](https://github.com/HarbourMasters/SpaghettiKart) | Mario Kart 64 | US MK64 ROM |
 | [Lighthouse](https://github.com/HarbourMasters/Lighthouse) | Banjo-Kazooie | US 1.0 / 1.1, JP, or PAL B-K ROM |
-| [Dusklight](https://github.com/HarbourMasters/Dusklight) | The Legend of Zelda: Twilight Princess | GameCube ISO (accepted by extension, not hash-verified) |
+| [Dusklight](https://github.com/TwilitRealm/dusklight) | The Legend of Zelda: Twilight Princess | GameCube ISO (accepted by extension, not hash-verified) |
 
 Ports are listed on the platform where they publish builds — e.g. some ports have no macOS release, so they won't appear on macOS.
 
