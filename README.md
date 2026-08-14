@@ -1,0 +1,105 @@
+# Portyoshka
+
+A desktop launcher for fan-made native PC ports of classic console games. Install, update, and launch ports straight from their official GitHub releases — no manual downloading, unzipping, or fiddling with AppImages.
+
+Built with Electron, React, TypeScript, and Zustand.
+
+## Features
+
+- **One-click install** — picks the right release asset for your OS and platform, downloads it, verifies it, and extracts it
+- **ROM handling** — guides you through providing a legally obtained ROM for each game and validates its hash where the port publishes one
+- **Updates** — checks the port's GitHub releases and updates in place, preserving your saves and extracted game data
+- **Clean launches** — launches, monitors, and kills the port's processes properly (handles AppImage FUSE quirks and child processes)
+- **Cross-platform** — Windows, macOS, and Linux
+
+## Supported ports
+
+| Port | Game | Requires |
+| --- | --- | --- |
+| [Shipwright](https://github.com/HarbourMasters/Shipwright) | The Legend of Zelda: Ocarina of Time | US OoT ROM (`*.z64`, SHA-1 verified) |
+| [2Ship 2 Harkinian](https://github.com/HarbourMasters/2ship2harkinian) | The Legend of Zelda: Majora's Mask | US / EU MM ROM (SHA-1 verified) |
+| [Ghostship](https://github.com/HarbourMasters/Ghostship) | Super Mario 64 | US or JP SM64 ROM (`*.z64`, SHA-1 verified) |
+| [Starship](https://github.com/HarbourMasters/Starship) | Star Fox 64 | US 1.0 / 1.1 SF64 ROM |
+| [Spaghetti Kart](https://github.com/HarbourMasters/SpaghettiKart) | Mario Kart 64 | US MK64 ROM |
+| [Lighthouse](https://github.com/HarbourMasters/Lighthouse) | Banjo-Kazooie | US 1.0 / 1.1, JP, or PAL B-K ROM |
+| [Dusklight](https://github.com/HarbourMasters/Dusklight) | The Legend of Zelda: Twilight Princess | GameCube ISO (accepted by extension, not hash-verified) |
+
+Ports are listed on the platform where they publish builds — e.g. some ports have no macOS release, so they won't appear on macOS.
+
+## Requirements
+
+- **A legitimate ROM dump** of each game you want to play, from your own cartridge/disc. Portyoshka never downloads or hosts game ROMs.
+- Windows: nothing extra. Linux: if your distro lacks FUSE, AppImages still run (Portyoshka auto-extracts them). Ubuntu users on some ports may need `zenity`/`kdialog` for in-game ROM pickers.
+- 4+ GB free disk per port — the ports and their extracted assets are large.
+
+## Development
+
+```sh
+npm install
+npm start          # dev run (main + preload + renderer)
+npm run lint       # eslint
+npm run typecheck  # tsc --noEmit
+npm run smoke      # end-to-end smoke suite (downloads real releases — see below)
+```
+
+Notes:
+
+- `npm run smoke` hits the real GitHub API and downloads actual releases, so it can fail from GitHub's 60 req/hr unauthenticated rate limit. That's a flake, not a bug — you can raise the limit by adding a GitHub token in Settings.
+- Requires Node >= 22.5 with `node:sqlite` support (23.4+ recommended) and `python3` on PATH.
+
+## Architecture
+
+See `AGENTS.md` for a full developer guide. The short version:
+
+- IPC contract: `PortyoshkaApi` + `MainEvent` in `src/shared/types.ts` → handlers in `src/main/ipc.ts` → preload bridge in `src/preload.ts` → consumed via `window.portyoshka`.
+- Database: `node:sqlite` (WAL, foreign keys on), migrations are an append-only array.
+- Ports: `src/main/registry/ports/`, each a `PortConfig` pointing at a GitHub repo, its release asset glob, executable name, ROM spec, and `preserveOnUpdate` globs.
+
+## Making a release
+
+There is no auto-update for the launcher itself (updates are checked only for the installed ports), so each release is a manual GitHub Release with platform artifacts.
+
+### 1. Bump the version
+
+Edit `version` in `package.json`, then commit and tag:
+
+```sh
+git tag v1.0.0
+git push origin main --tags
+```
+
+### 2. Build the artifacts
+
+Each platform's installer must be built **on that platform** (Squirrel needs Windows, `.deb`/`.rpm` need Linux, the ZIP maker targets macOS):
+
+```sh
+npm install
+npm run make
+```
+
+Artifacts land in `out/make/`:
+
+| Platform | File | What it is |
+| --- | --- | --- |
+| Windows | `Portyoshka-1.0.0 Setup.exe` | Squirrel installer |
+| macOS | `Portyoshka-darwin-*.zip` | App bundle, unzip and drag to Applications |
+| Linux | `portyoshka_1.0.0_amd64.deb`, `portyoshka-1.0.0.x86_64.rpm` | Packages for Debian/Ubuntu and Fedora/RHEL distros |
+
+A GitHub Actions matrix (`ubuntu-latest` + `windows-latest` + `macos-latest`) can build all three from a tag automatically — open an issue if you want this added, or ask and I can add it.
+
+### 3. Create the GitHub Release
+
+1. Push the tag, then go to **Releases → Draft a new release** (or use `gh release create`).
+2. Choose the tag, title it `v1.0.0`.
+3. Attach every artifact from `out/make/`.
+4. Publish. Users install the right artifact for their OS.
+
+### Known caveats for a first release
+
+- **Unsigned binaries**: without code signing, Windows shows a SmartScreen "unknown publisher" warning and macOS shows a "damaged/unverified" warning (users right-click → Open). Electron Forge also warns about the missing `authors` field. This is expected for a hobby project; signing certificates can be added later.
+- **Electron binary bloat**: the download of `electron` in CI is large (~100 MB per platform) — builds take a few minutes.
+- **Test before tagging**: run `npm run lint`, `npm run typecheck`, and `npm run smoke` on the same machine before cutting the tag.
+
+## Legal
+
+Portyoshka is an unofficial fan project. It is not affiliated with Nintendo, or with the port projects' authors — it merely downloads their releases from GitHub and helps you run them. Game ROMs are not distributed; you must provide your own legally obtained copies. This project is MIT licensed; see the port projects' licenses for their terms.
