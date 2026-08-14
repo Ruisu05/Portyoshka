@@ -30,6 +30,7 @@ jobs:
           node-version: 24
           cache: npm
       - name: Set version from tag
+        shell: bash
         run: npm version --no-git-tag-version "${GITHUB_REF_NAME#v}"
       - run: npm ci
       - name: Install packaging tools (Linux)
