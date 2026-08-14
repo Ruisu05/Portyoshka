@@ -16,11 +16,12 @@ jobs:
           - os: ubuntu-latest
             name: linux
             make-path: |
-              out/make/deb/*
-              out/make/rpm/*
+              out/make/deb/*.deb
+              out/make/rpm/*.rpm
+              out/make/appimage/x64/*.AppImage
           - os: windows-latest
             name: windows
-            make-path: out/make/squirrel.windows/x64/*
+            make-path: out/make/squirrel.windows/x64/Portyoshka-*-Setup.exe
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -28,11 +29,24 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - name: Set version from tag
+        run: npm version --no-git-tag-version "${GITHUB_REF_NAME#v}"
       - run: npm ci
-      - name: Install RPM build tools (Linux)
+      - name: Install packaging tools (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y rpm
+        run: sudo apt-get update && sudo apt-get install -y rpm squashfs-tools
       - run: npm run make
+      - name: Rename artifacts
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [ "${{ matrix.name }}" = "linux" ]; then
+            mv out/make/deb/*.deb "out/make/deb/Portyoshka-${VERSION}-Linux.deb"
+            mv out/make/rpm/*.rpm "out/make/rpm/Portyoshka-${VERSION}-Linux.rpm"
+            mv out/make/appimage/x64/*.AppImage "out/make/appimage/x64/Portyoshka-${VERSION}-Linux.AppImage"
+          else
+            mv out/make/squirrel.windows/x64/*Setup*.exe "out/make/squirrel.windows/x64/Portyoshka-${VERSION}-Windows-Setup.exe"
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.name }}

@@ -61,33 +61,38 @@ There is no auto-update for the launcher itself (updates are checked only for th
 
 ### 1. Bump the version
 
-Edit `version` in `package.json`, then commit and tag:
+Edit `version` in `package.json`, then commit and tag. (CI overrides the version from the tag at build time, so artifacts always match the release number — but bump it anyway so local builds are correct too.)
 
 ```sh
 git tag v1.0.0
 git push origin main --tags
 ```
 
-### 2. Build the artifacts
+Pushing a `v*` tag triggers the GitHub Actions workflow, which builds all artifacts, renames them with the OS in the filename, and publishes the GitHub Release automatically:
 
-Each platform's installer must be built **on that platform** (Squirrel needs Windows, `.deb`/`.rpm` need Linux, the ZIP maker targets macOS):
+| Platform | File | What it is |
+| --- | --- | --- |
+| Windows | `Portyoshka-1.0.0-Windows-Setup.exe` | Squirrel installer |
+| Linux | `Portyoshka-1.0.0-Linux.AppImage` | Portable, run on any distro (needs FUSE; Portyoshka itself auto-extracts AppImages it launches) |
+| Linux | `Portyoshka-1.0.0-Linux.deb` | Debian/Ubuntu package |
+| Linux | `Portyoshka-1.0.0-Linux.rpm` | Fedora/RHEL package |
+
+macOS builds are not automated yet — run `npm run make` on a Mac (the ZIP maker targets darwin).
+
+### 2. Building locally
+
+Each platform's installer must be built **on that platform** (Squirrel needs Windows, `.deb`/`.rpm`/AppImage need Linux):
 
 ```sh
 npm install
 npm run make
 ```
 
-Artifacts land in `out/make/`:
+Artifacts land in `out/make/`. Building the AppImage locally needs `mksquashfs` on PATH (`squashfs-tools` package: `sudo pacman -S squashfs-tools` on Arch/CachyOS, `sudo apt install squashfs-tools` on Debian/Ubuntu).
 
-| Platform | File | What it is |
-| --- | --- | --- |
-| Windows | `Portyoshka-1.0.0 Setup.exe` | Squirrel installer |
-| macOS | `Portyoshka-darwin-*.zip` | App bundle, unzip and drag to Applications |
-| Linux | `portyoshka_1.0.0_amd64.deb`, `portyoshka-1.0.0.x86_64.rpm` | Packages for Debian/Ubuntu and Fedora/RHEL distros |
+### 3. Create the GitHub Release (manual fallback)
 
-A GitHub Actions matrix (`ubuntu-latest` + `windows-latest` + `macos-latest`) can build all three from a tag automatically — open an issue if you want this added, or ask and I can add it.
-
-### 3. Create the GitHub Release
+The workflow publishes releases automatically. If you do it by hand instead:
 
 1. Push the tag, then go to **Releases → Draft a new release** (or use `gh release create`).
 2. Choose the tag, title it `v1.0.0`.
