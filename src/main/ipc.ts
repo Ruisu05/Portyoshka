@@ -342,9 +342,11 @@ export function registerIpc(deps: IpcDeps): void {
     },
   );
 
+  const settingsData = (): SettingsData => ({ ...deps.settings.get(), version: app.getVersion() });
+
   ipcMain.handle('settings:get', async (): Promise<IpcResult<SettingsData>> => {
     try {
-      return ok(deps.settings.get());
+      return ok(settingsData());
     } catch (err) {
       return fail(err);
     }
@@ -352,7 +354,8 @@ export function registerIpc(deps: IpcDeps): void {
 
   ipcMain.handle('settings:set', async (_event, patch): Promise<IpcResult<SettingsData>> => {
     try {
-      return ok(deps.settings.set(patch));
+      deps.settings.set(patch);
+      return ok(settingsData());
     } catch (err) {
       return fail(err);
     }
@@ -362,7 +365,8 @@ export function registerIpc(deps: IpcDeps): void {
     'settings:setPortDirOverride',
     async (_event, portId: string, dir: string | null): Promise<IpcResult<SettingsData>> => {
       try {
-        return ok(deps.settings.setPortDirOverride(portId, dir));
+        deps.settings.setPortDirOverride(portId, dir);
+        return ok(settingsData());
       } catch (err) {
         return fail(err);
       }

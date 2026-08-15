@@ -85,6 +85,9 @@ export function SettingsDialog() {
 
         <div className="modal-actions">
           {saved && <span className="saved-hint">Saved</span>}
+          <span className="version-hint" style={{ marginRight: 'auto', color: 'var(--text-dim)' }}>
+            Portyoshka v{settings?.version ?? '…'}
+          </span>
           <button className="btn btn-ghost" onClick={() => setSettingsDialogOpen(false)}>
             Close
           </button>

@@ -159,6 +159,7 @@ export interface SettingsData {
   rootInstallDir: string;
   githubToken: string;
   portDirOverrides: Record<string, string>;
+  version: string;
 }
 
 export type MainEvent =

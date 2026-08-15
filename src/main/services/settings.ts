@@ -2,10 +2,12 @@ import path from 'node:path';
 import type { DatabaseBundle } from '../db';
 import type { SettingsData } from '../../shared/types';
 
+export type SettingsStoreData = Omit<SettingsData, 'version'>;
+
 export interface SettingsStore {
-  get(): SettingsData;
-  set(patch: Partial<Pick<SettingsData, 'rootInstallDir' | 'githubToken'>>): SettingsData;
-  setPortDirOverride(portId: string, dir: string | null): SettingsData;
+  get(): SettingsStoreData;
+  set(patch: Partial<Pick<SettingsData, 'rootInstallDir' | 'githubToken'>>): SettingsStoreData;
+  setPortDirOverride(portId: string, dir: string | null): SettingsStoreData;
   listOverrides(): Record<string, string>;
   getPortDirOverride(portId: string): string | null;
   getRootInstallDir(): string;
@@ -36,7 +38,7 @@ export function createSettingsStore(db: DatabaseBundle, defaultRootInstallDir: s
     },
     set(patch) {
       const current = this.get();
-      const next: SettingsData = {
+      const next: SettingsStoreData = {
         ...current,
         ...patch,
       };
