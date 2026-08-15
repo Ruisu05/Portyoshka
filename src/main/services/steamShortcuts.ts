@@ -30,6 +30,10 @@ function shortcutAppId(exe: string, appName: string): number {
   return crc32(exe + appName) | 0x80000000;
 }
 
+export function steamShortcutAppId(exe: string, appName: string): number {
+  return shortcutAppId(exe, appName);
+}
+
 function steamUserdataDir(platform: Platform, homeDir: string): string | null {
   const candidates: string[] = [];
   if (platform === 'windows') {
@@ -119,6 +123,54 @@ export interface AddSteamShortcutInput {
   appName: string;
   exe: string;
   startDir: string;
+  iconPath: string | null;
+}
+
+export interface RemoveSteamShortcutInput {
+  platform: Platform;
+  getHomeDir: () => string;
+  appName: string;
+  exe: string;
+}
+
+function resolveShortcutsFile(platform: Platform, homeDir: string): { filePath: string; exists: boolean } | null {
+  const userdataDir = steamUserdataDir(platform, homeDir);
+  if (!userdataDir) {
+    return null;
+  }
+  const configDir = pickAccountDir(userdataDir);
+  const filePath = path.join(configDir, 'shortcuts.vdf');
+  return { filePath, exists: fs.existsSync(filePath) };
+}
+
+function readShortcuts(filePath: string): SteamShortcutsData {
+  return shortcutEditor.parseBuffer(fs.readFileSync(filePath));
+}
+
+function writeShortcuts(filePath: string, data: SteamShortcutsData): void {
+  fs.writeFileSync(filePath, shortcutEditor.writeBuffer(data));
+}
+
+function findIndexByAppId(data: SteamShortcutsData, appId: number): number {
+  return data.shortcuts.findIndex((s) => s.appid === appId);
+}
+
+export function listSteamShortcutAppIds(platform: Platform, homeDir: string): Set<number> {
+  const ids = new Set<number>();
+  try {
+    const resolved = resolveShortcutsFile(platform, homeDir);
+    if (!resolved || !resolved.exists) {
+      return ids;
+    }
+    for (const shortcut of readShortcuts(resolved.filePath).shortcuts) {
+      if (typeof shortcut.appid === 'number') {
+        ids.add(shortcut.appid);
+      }
+    }
+  } catch {
+    // best effort; treat as no shortcuts
+  }
+  return ids;
 }
 
 export function addSteamShortcut(input: AddSteamShortcutInput): string {
@@ -128,35 +180,18 @@ export function addSteamShortcut(input: AddSteamShortcutInput): string {
       'Steam is running. Quit Steam first — it overwrites shortcuts.vdf on exit.',
     );
   }
-  const userdataDir = steamUserdataDir(input.platform, input.getHomeDir());
-  if (!userdataDir) {
+  const resolved = resolveShortcutsFile(input.platform, input.getHomeDir());
+  if (!resolved) {
     throw new AppError(
       'STEAM_NOT_FOUND',
       'Steam installation not found. Install Steam and sign in once first.',
     );
   }
-  const configDir = pickAccountDir(userdataDir);
-  fs.mkdirSync(configDir, { recursive: true });
-  const filePath = path.join(configDir, 'shortcuts.vdf');
-
-  let data: SteamShortcutsData;
-  if (fs.existsSync(filePath)) {
-    try {
-      data = shortcutEditor.parseBuffer(fs.readFileSync(filePath));
-    } catch (err) {
-      throw new AppError(
-        'UNKNOWN',
-        'Could not read the existing shortcuts.vdf. If it looks damaged, delete it and try again.',
-        (err as Error).message,
-      );
-    }
-    fs.copyFileSync(filePath, `${filePath}.bak`);
-  } else {
-    data = { shortcuts: [] };
-  }
+  fs.mkdirSync(path.dirname(resolved.filePath), { recursive: true });
+  const data = resolved.exists ? readShortcuts(resolved.filePath) : { shortcuts: [] };
 
   const appId = shortcutAppId(input.exe, input.appName);
-  if (data.shortcuts.some((s) => s.appid === appId)) {
+  if (findIndexByAppId(data, appId) !== -1) {
     throw new AppError('ALREADY_EXISTS', `${input.appName} is already in your Steam library.`);
   }
 
@@ -165,7 +200,7 @@ export function addSteamShortcut(input: AddSteamShortcutInput): string {
     AppName: input.appName,
     exe: quoteIfNeeded(input.exe),
     StartDir: quoteIfNeeded(input.startDir),
-    icon: '',
+    icon: input.iconPath ? quoteIfNeeded(input.iconPath) : '',
     ShortcutPath: '',
     LaunchOptions: '',
     IsHidden: false,
@@ -179,6 +214,31 @@ export function addSteamShortcut(input: AddSteamShortcutInput): string {
     tags: [],
   });
 
-  fs.writeFileSync(filePath, shortcutEditor.writeBuffer(data));
-  return filePath;
+  if (resolved.exists) {
+    fs.copyFileSync(resolved.filePath, `${resolved.filePath}.bak`);
+  }
+  writeShortcuts(resolved.filePath, data);
+  return resolved.filePath;
+}
+
+export function removeSteamShortcut(input: RemoveSteamShortcutInput): void {
+  if (isSteamRunning(input.platform)) {
+    throw new AppError(
+      'STEAM_RUNNING',
+      'Steam is running. Quit Steam first — it overwrites shortcuts.vdf on exit.',
+    );
+  }
+  const resolved = resolveShortcutsFile(input.platform, input.getHomeDir());
+  if (!resolved || !resolved.exists) {
+    return;
+  }
+  const data = readShortcuts(resolved.filePath);
+  const appId = shortcutAppId(input.exe, input.appName);
+  const index = findIndexByAppId(data, appId);
+  if (index === -1) {
+    return;
+  }
+  data.shortcuts.splice(index, 1);
+  fs.copyFileSync(resolved.filePath, `${resolved.filePath}.bak`);
+  writeShortcuts(resolved.filePath, data);
 }

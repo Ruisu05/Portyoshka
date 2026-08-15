@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from './api';
+import { iconUrl } from './icons';
 import type {
   AppErrorInfo,
   InstallProgress,
@@ -60,6 +61,7 @@ interface AppState {
   showFolder(portId: string): Promise<void>;
   openRepo(portId: string): Promise<void>;
   addToSteam(portId: string): Promise<void>;
+  removeFromSteam(portId: string): Promise<void>;
   setUpdateDialogOpen(open: boolean): void;
   setSettingsDialogOpen(open: boolean): void;
   saveSettings(patch: Partial<Pick<SettingsData, 'rootInstallDir' | 'githubToken'>>): Promise<void>;
@@ -309,10 +311,41 @@ export const useStore = create<AppState>()((set, get) => ({
   },
 
   async addToSteam(portId) {
-    const result = await api.addSteamShortcut(portId);
+    const entry = get().library.find((l) => l.port.id === portId);
+    if (!entry) {
+      return;
+    }
+    if (entry.inSteam) {
+      await get().removeFromSteam(portId);
+      return;
+    }
+    let iconData: ArrayBuffer | null = null;
+    if (entry.port.icon) {
+      const url = iconUrl(entry.port.icon);
+      if (url) {
+        try {
+          iconData = await (await fetch(url)).arrayBuffer();
+        } catch {
+          // icon is nice-to-have; proceed without it
+        }
+      }
+    }
+    const result = await api.addSteamShortcut(portId, iconData);
+    if (result.ok) {
+      const name = entry.port.displayName;
+      get().pushSuccess(`${name} added to Steam. Restart Steam to see it.`);
+      await get().refresh();
+    } else {
+      get().pushError(result.error);
+    }
+  },
+
+  async removeFromSteam(portId) {
+    const result = await api.removeSteamShortcut(portId);
     if (result.ok) {
       const name = get().library.find((l) => l.port.id === portId)?.port.displayName ?? portId;
-      get().pushSuccess(`${name} added to Steam. Restart Steam to see it.`);
+      get().pushSuccess(`${name} removed from Steam. Restart Steam to see the change.`);
+      await get().refresh();
     } else {
       get().pushError(result.error);
     }

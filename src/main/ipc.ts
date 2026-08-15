@@ -1,5 +1,6 @@
 import { ipcMain, dialog, shell, app, BrowserWindow } from 'electron';
 import fs from 'node:fs';
+import path from 'node:path';
 import type { DatabaseBundle } from './db';
 import type { AppPaths } from './paths';
 import type { LaunchManager } from './services/launcher';
@@ -10,7 +11,7 @@ import { checkForUpdates, checkForSelfUpdate } from './services/updater';
 import { performSelfUpdate } from './services/selfUpdater';
 import { buildLibrary, buildCatalog, getEntryPort } from './services/library';
 import { uninstallPort } from './services/uninstall';
-import { addSteamShortcut } from './services/steamShortcuts';
+import { addSteamShortcut, removeSteamShortcut } from './services/steamShortcuts';
 import { AppError, asAppError } from './services/errors';
 import type {
   IpcResult,
@@ -61,6 +62,7 @@ export function registerIpc(deps: IpcDeps): void {
     paths: deps.paths,
     launchManager: deps.launchManager,
     updateResults,
+    getHomeDir: deps.getHomeDir,
   });
 
   const ok = <T,>(data: T): IpcResult<T> => ({ ok: true, data });
@@ -312,20 +314,50 @@ export function registerIpc(deps: IpcDeps): void {
     }
   });
 
-  ipcMain.handle('steam:addShortcut', async (_event, portId: string): Promise<IpcResult<string>> => {
+  ipcMain.handle(
+    'steam:addShortcut',
+    async (_event, portId: string, iconData: ArrayBuffer | null): Promise<IpcResult<string>> => {
+      try {
+        const entry = buildLibrary(libraryDeps()).find((e) => e.port.id === portId);
+        if (!entry?.installed) {
+          return fail(new AppError('UNKNOWN', 'This port is not installed'));
+        }
+        let iconPath: string | null = null;
+        if (iconData && iconData.byteLength > 0) {
+          iconPath = path.join(deps.paths.dataDir, 'icons', `${portId}.png`);
+          fs.mkdirSync(path.dirname(iconPath), { recursive: true });
+          fs.writeFileSync(iconPath, Buffer.from(iconData));
+        }
+        const shortcutFile = addSteamShortcut({
+          platform: deps.platform,
+          getHomeDir: deps.getHomeDir,
+          appName: entry.port.displayName,
+          exe: entry.installed.executablePath,
+          startDir: entry.installed.installPath,
+          iconPath,
+        });
+        return ok(shortcutFile);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  ipcMain.handle('steam:removeShortcut', async (_event, portId: string): Promise<IpcResult<null>> => {
     try {
       const entry = buildLibrary(libraryDeps()).find((e) => e.port.id === portId);
       if (!entry?.installed) {
         return fail(new AppError('UNKNOWN', 'This port is not installed'));
       }
-      const shortcutFile = addSteamShortcut({
+      removeSteamShortcut({
         platform: deps.platform,
         getHomeDir: deps.getHomeDir,
         appName: entry.port.displayName,
         exe: entry.installed.executablePath,
-        startDir: entry.installed.installPath,
       });
-      return ok(shortcutFile);
+      const iconPath = path.join(deps.paths.dataDir, 'icons', `${portId}.png`);
+      fs.rmSync(iconPath, { force: true });
+      return ok(null);
     } catch (err) {
       return fail(err);
     }

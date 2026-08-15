@@ -271,6 +271,7 @@ z.close()
       running: false,
       playtimeMs: 0,
       lastPlayedAt: 0,
+      inSteam: false,
     };
 
     await launchManager.launch(noRomPort, fakeEntry);

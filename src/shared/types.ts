@@ -128,6 +128,7 @@ export interface LibraryEntry {
   running: boolean;
   playtimeMs: number;
   lastPlayedAt: number;
+  inSteam: boolean;
 }
 
 export interface UpdateCheckResult {
@@ -187,7 +188,8 @@ export interface PortyoshkaApi {
   stopLaunch(portId: string): Promise<IpcResult<null>>;
   showFolder(portId: string): Promise<IpcResult<null>>;
   openRepo(portId: string): Promise<IpcResult<null>>;
-  addSteamShortcut(portId: string): Promise<IpcResult<string>>;
+  addSteamShortcut(portId: string, iconData: ArrayBuffer | null): Promise<IpcResult<string>>;
+  removeSteamShortcut(portId: string): Promise<IpcResult<null>>;
   uninstall(portId: string, keepSettings: boolean): Promise<IpcResult<null>>;
   exportLog(portId: string, content: string): Promise<IpcResult<string | null>>;
   getSettings(): Promise<IpcResult<SettingsData>>;
