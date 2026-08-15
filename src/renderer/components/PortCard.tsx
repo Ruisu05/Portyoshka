@@ -42,6 +42,23 @@ function TrashIcon() {
   );
 }
 
+function SteamIcon({ remove }: { remove?: boolean }) {
+  return (
+    <span className="steam-icon-wrap">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="12" r="3.5" />
+        <path d="M12 3v5.5M12 15.5V21M3 12h5.5M15.5 12H21M5.6 5.6l3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9" />
+      </svg>
+      {remove && (
+        <svg className="steam-icon-x" viewBox="0 0 10 10" width="9" height="9">
+          <path d="M1 1l8 8M9 1l-8 8" stroke="#e5484d" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        </svg>
+      )}
+    </span>
+  );
+}
+
 function formatPlaytime(ms: number): string {
   const totalMinutes = Math.floor(ms / 60000);
   if (totalMinutes < 60) {
@@ -168,11 +185,6 @@ export function PortCard({ entry }: { entry: LibraryEntry }) {
             {visibleLogs[entry.port.id] ? 'Hide output' : 'Output'}
           </button>
         )}
-        {entry.installed && !busy && (
-          <button className="btn btn-ghost" onClick={() => void addToSteam(entry.port.id)}>
-            {entry.inSteam ? 'Remove from Steam' : 'Add to Steam'}
-          </button>
-        )}
         {romMissing && entry.installed && !busy && !running && (
           <button className="btn btn-ghost" onClick={() => openRomPrompt(entry.port.id, false)}>
             Attach ROM
@@ -203,6 +215,13 @@ export function PortCard({ entry }: { entry: LibraryEntry }) {
                 onClick={() => void openRepo(entry.port.id)}
               >
                 <GitHubIcon />
+              </button>
+              <button
+                className="icon-btn"
+                title={entry.inSteam ? 'Remove from Steam' : 'Add to Steam'}
+                onClick={() => void addToSteam(entry.port.id)}
+              >
+                <SteamIcon remove={entry.inSteam} />
               </button>
               {!running && (
                 <button

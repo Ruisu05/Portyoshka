@@ -387,6 +387,17 @@ body {
   color: #ff9d97;
 }
 
+.steam-icon-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.steam-icon-x {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+}
+
 .fab {
   position: fixed;
   bottom: 22px;
