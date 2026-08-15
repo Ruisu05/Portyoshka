@@ -68,6 +68,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          NOTES=$(awk -v v="## ${VERSION}" '$0 == v { found=1; next } /^## / { found=0 } found { print }' CHANGELOG.md)
+          if [ -z "$NOTES" ]; then NOTES="Release ${VERSION}"; fi
           mapfile -t files < <(find artifacts -type f)
           printf 'Uploading: %s\n' "${files[@]}"
-          gh release create "$GITHUB_REF_NAME" "${files[@]}" --title "$GITHUB_REF_NAME" --generate-notes
+          gh release create "$GITHUB_REF_NAME" "${files[@]}" --title "$GITHUB_REF_NAME" --notes "$NOTES"

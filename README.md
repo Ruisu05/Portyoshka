@@ -61,7 +61,7 @@ There is no auto-update for the launcher itself (updates are checked only for th
 
 ### 1. Bump the version
 
-Edit `version` in `package.json`, then commit and tag. (CI overrides the version from the tag at build time, so artifacts always match the release number — but bump it anyway so local builds are correct too.)
+Edit `version` in `package.json` and add a `## <version>` section to `CHANGELOG.md` (its bullets become the release notes), then commit and tag. (CI overrides the version from the tag at build time, so artifacts always match the release number — but bump it anyway so local builds are correct too.)
 
 ```sh
 git tag v1.0.0
