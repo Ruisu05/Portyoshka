@@ -31,7 +31,7 @@ jobs:
           cache: npm
       - name: Set version from tag
         shell: bash
-        run: npm version --no-git-tag-version "${GITHUB_REF_NAME#v}"
+        run: npm version --no-git-tag-version --allow-same-version "${GITHUB_REF_NAME#v}"
       - run: npm ci
       - name: Install packaging tools (Linux)
         if: runner.os == 'Linux'
