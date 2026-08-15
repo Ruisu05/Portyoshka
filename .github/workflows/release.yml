@@ -16,8 +16,8 @@ jobs:
           - os: ubuntu-latest
             name: linux
             make-path: |
-              out/make/deb/*.deb
-              out/make/rpm/*.rpm
+              out/make/deb/x64/*.deb
+              out/make/rpm/x64/*.rpm
               out/make/appimage/x64/*.AppImage
           - os: windows-latest
             name: windows
@@ -42,8 +42,8 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           if [ "${{ matrix.name }}" = "linux" ]; then
-            mv out/make/deb/*.deb "out/make/deb/Portyoshka-${VERSION}-Linux.deb"
-            mv out/make/rpm/*.rpm "out/make/rpm/Portyoshka-${VERSION}-Linux.rpm"
+            mv out/make/deb/x64/*.deb "out/make/deb/x64/Portyoshka-${VERSION}-Linux.deb"
+            mv out/make/rpm/x64/*.rpm "out/make/rpm/x64/Portyoshka-${VERSION}-Linux.rpm"
             mv out/make/appimage/x64/*.AppImage "out/make/appimage/x64/Portyoshka-${VERSION}-Linux.AppImage"
           else
             mv out/make/squirrel.windows/x64/*Setup*.exe "out/make/squirrel.windows/x64/Portyoshka-${VERSION}-Windows-Setup.exe"
