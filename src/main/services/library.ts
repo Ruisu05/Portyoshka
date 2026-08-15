@@ -18,6 +18,7 @@ export function buildLibrary(deps: LibraryDeps): LibraryEntry[] {
   return visiblePortsOn(deps.platform).map((port) => {
     const installed = deps.db.ports.getInstalled(port.id);
     const update = updateByPort.get(port.id);
+    const playtime = deps.db.playtime.get(port.id);
     return {
       port,
       installed,
@@ -25,6 +26,8 @@ export function buildLibrary(deps: LibraryDeps): LibraryEntry[] {
       latestVersion: update && !update.error ? update.latestVersion : null,
       romStatus: getRomStatus({ paths: deps.paths, db: deps.db }, port),
       running: deps.launchManager.isRunning(port.id),
+      playtimeMs: playtime.totalMs,
+      lastPlayedAt: playtime.lastPlayedAt,
     };
   });
 }

@@ -4,11 +4,13 @@ import fs from 'node:fs';
 import { SettingsRepo, createSettingsRepo } from './settingsRepo';
 import { PortsRepo, createPortsRepo } from './portsRepo';
 import { RomsRepo, createRomsRepo } from './romsRepo';
+import { PlaytimeRepo, createPlaytimeRepo } from './playtimeRepo';
 
 export interface DatabaseBundle {
   settings: SettingsRepo;
   ports: PortsRepo;
   roms: RomsRepo;
+  playtime: PlaytimeRepo;
   close(): void;
 }
 
@@ -45,6 +47,13 @@ const MIGRATIONS: string[] = [
     rom_sha1 TEXT NOT NULL REFERENCES roms(sha1)
   );
   `,
+  `
+  CREATE TABLE IF NOT EXISTS playtime (
+    port_id TEXT PRIMARY KEY,
+    total_ms INTEGER NOT NULL DEFAULT 0,
+    last_played_at INTEGER NOT NULL DEFAULT 0
+  );
+  `,
 ];
 
 export function openDatabase(dbFile: string): DatabaseBundle {
@@ -59,6 +68,7 @@ export function openDatabase(dbFile: string): DatabaseBundle {
     settings: createSettingsRepo(raw),
     ports: createPortsRepo(raw),
     roms: createRomsRepo(raw),
+    playtime: createPlaytimeRepo(raw),
     close: () => raw.close(),
   };
 }

@@ -59,6 +59,7 @@ interface AppState {
   uninstall(portId: string, keepSettings: boolean): Promise<void>;
   showFolder(portId: string): Promise<void>;
   openRepo(portId: string): Promise<void>;
+  addToSteam(portId: string): Promise<void>;
   setUpdateDialogOpen(open: boolean): void;
   setSettingsDialogOpen(open: boolean): void;
   saveSettings(patch: Partial<Pick<SettingsData, 'rootInstallDir' | 'githubToken'>>): Promise<void>;
@@ -303,6 +304,16 @@ export const useStore = create<AppState>()((set, get) => ({
   async openRepo(portId) {
     const result = await api.openRepo(portId);
     if (!result.ok) {
+      get().pushError(result.error);
+    }
+  },
+
+  async addToSteam(portId) {
+    const result = await api.addSteamShortcut(portId);
+    if (result.ok) {
+      const name = get().library.find((l) => l.port.id === portId)?.port.displayName ?? portId;
+      get().pushSuccess(`${name} added to Steam. Restart Steam to see it.`);
+    } else {
       get().pushError(result.error);
     }
   },

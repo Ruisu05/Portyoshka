@@ -19,9 +19,11 @@ interface RunningPort {
   relaunched: boolean;
   stopInitiated: boolean;
   stderrTail: string;
+  startedAt: number;
 }
 
 const FUSE_ERROR_PATTERN = /error loading libfuse\.so|libfuse\.so\.\d+: cannot open shared object/i;
+const MAX_SESSION_MS = 24 * 60 * 60 * 1000;
 
 export class LaunchManager {
   private running = new Map<string, RunningPort>();
@@ -39,6 +41,14 @@ export class LaunchManager {
 
   private emitExit(portId: string, record: RunningPort): void {
     this.running.delete(portId);
+    const elapsed = Math.min(Math.max(Date.now() - record.startedAt, 0), MAX_SESSION_MS);
+    if (elapsed >= 1000) {
+      try {
+        this.deps.db.playtime.addSession(portId, elapsed);
+      } catch {
+        // playtime is best-effort; never break the exit path
+      }
+    }
     this.safeEmit({
       type: 'launch-exit',
       portId,
@@ -199,7 +209,13 @@ export class LaunchManager {
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    const record: RunningPort = { child, relaunched, stopInitiated: false, stderrTail: '' };
+    const record: RunningPort = {
+      child,
+      relaunched,
+      stopInitiated: false,
+      stderrTail: '',
+      startedAt: Date.now(),
+    };
 
     child.on('error', () => {
       this.running.delete(port.id);

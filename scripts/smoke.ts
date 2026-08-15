@@ -269,6 +269,8 @@ z.close()
       latestVersion: null,
       romStatus: { linked: false, unverified: false, rom: null },
       running: false,
+      playtimeMs: 0,
+      lastPlayedAt: 0,
     };
 
     await launchManager.launch(noRomPort, fakeEntry);

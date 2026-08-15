@@ -42,6 +42,26 @@ function TrashIcon() {
   );
 }
 
+function SteamIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="3.5" />
+      <path d="M12 3v5.5M12 15.5V21M3 12h5.5M15.5 12H21M5.6 5.6l3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9" />
+    </svg>
+  );
+}
+
+function formatPlaytime(ms: number): string {
+  const totalMinutes = Math.floor(ms / 60000);
+  if (totalMinutes < 60) {
+    return `${Math.max(totalMinutes, 1)}m`;
+  }
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+}
+
 export function PortCard({ entry }: { entry: LibraryEntry }) {
   const installs = useStore((s) => s.installs);
   const busyInstalls = useStore((s) => s.busyInstalls);
@@ -54,6 +74,7 @@ export function PortCard({ entry }: { entry: LibraryEntry }) {
   const visibleLogs = useStore((s) => s.visibleLogs);
   const showFolder = useStore((s) => s.showFolder);
   const openRepo = useStore((s) => s.openRepo);
+  const addToSteam = useStore((s) => s.addToSteam);
   const openUninstallPrompt = useStore((s) => s.openUninstallPrompt);
 
   const progress = installs[entry.port.id];
@@ -106,6 +127,18 @@ export function PortCard({ entry }: { entry: LibraryEntry }) {
             {entry.romStatus.unverified && (
               <span className="badge" title="No published hash list for this port yet">
                 ROM unverified
+              </span>
+            )}
+            {entry.playtimeMs > 0 && (
+              <span
+                className="badge"
+                title={
+                  entry.lastPlayedAt > 0
+                    ? `Last played ${new Date(entry.lastPlayedAt).toLocaleString()}`
+                    : undefined
+                }
+              >
+                {formatPlaytime(entry.playtimeMs)} played
               </span>
             )}
           </div>
@@ -175,6 +208,13 @@ export function PortCard({ entry }: { entry: LibraryEntry }) {
                 onClick={() => void openRepo(entry.port.id)}
               >
                 <GitHubIcon />
+              </button>
+              <button
+                className="icon-btn"
+                title="Add to Steam"
+                onClick={() => void addToSteam(entry.port.id)}
+              >
+                <SteamIcon />
               </button>
               {!running && (
                 <button

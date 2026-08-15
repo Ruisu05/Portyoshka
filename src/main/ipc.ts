@@ -10,6 +10,7 @@ import { checkForUpdates, checkForSelfUpdate } from './services/updater';
 import { performSelfUpdate } from './services/selfUpdater';
 import { buildLibrary, buildCatalog, getEntryPort } from './services/library';
 import { uninstallPort } from './services/uninstall';
+import { addSteamShortcut } from './services/steamShortcuts';
 import { AppError, asAppError } from './services/errors';
 import type {
   IpcResult,
@@ -306,6 +307,25 @@ export function registerIpc(deps: IpcDeps): void {
       }
       await shell.openExternal(`https://github.com/${port.repo}`);
       return ok(null);
+    } catch (err) {
+      return fail(err);
+    }
+  });
+
+  ipcMain.handle('steam:addShortcut', async (_event, portId: string): Promise<IpcResult<string>> => {
+    try {
+      const entry = buildLibrary(libraryDeps()).find((e) => e.port.id === portId);
+      if (!entry?.installed) {
+        return fail(new AppError('UNKNOWN', 'This port is not installed'));
+      }
+      const shortcutFile = addSteamShortcut({
+        platform: deps.platform,
+        getHomeDir: deps.getHomeDir,
+        appName: entry.port.displayName,
+        exe: entry.installed.executablePath,
+        startDir: entry.installed.installPath,
+      });
+      return ok(shortcutFile);
     } catch (err) {
       return fail(err);
     }

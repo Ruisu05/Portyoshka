@@ -106,6 +106,9 @@ export type ErrorCode =
   | 'INSTALL_BUSY'
   | 'CANCELLED'
   | 'DISK_FULL'
+  | 'STEAM_NOT_FOUND'
+  | 'STEAM_RUNNING'
+  | 'ALREADY_EXISTS'
   | 'UNKNOWN';
 
 export interface AppErrorInfo {
@@ -123,6 +126,8 @@ export interface LibraryEntry {
   latestVersion: string | null;
   romStatus: RomStatus;
   running: boolean;
+  playtimeMs: number;
+  lastPlayedAt: number;
 }
 
 export interface UpdateCheckResult {
@@ -182,6 +187,7 @@ export interface PortyoshkaApi {
   stopLaunch(portId: string): Promise<IpcResult<null>>;
   showFolder(portId: string): Promise<IpcResult<null>>;
   openRepo(portId: string): Promise<IpcResult<null>>;
+  addSteamShortcut(portId: string): Promise<IpcResult<string>>;
   uninstall(portId: string, keepSettings: boolean): Promise<IpcResult<null>>;
   exportLog(portId: string, content: string): Promise<IpcResult<string | null>>;
   getSettings(): Promise<IpcResult<SettingsData>>;

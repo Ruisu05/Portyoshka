@@ -26,6 +26,7 @@ const api: PortyoshkaApi = {
   stopLaunch: (portId) => invoke<null>('launch:stop', portId),
   showFolder: (portId) => invoke<null>('port:showFolder', portId),
   openRepo: (portId) => invoke<null>('port:openRepo', portId),
+  addSteamShortcut: (portId) => invoke<string>('steam:addShortcut', portId),
   uninstall: (portId, keepSettings) => invoke<null>('uninstall:start', portId, keepSettings),
   exportLog: (portId, content) => invoke<string | null>('log:export', portId, content),
   getSettings: () => invoke<SettingsData>('settings:get'),
