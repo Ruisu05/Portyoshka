@@ -5,6 +5,8 @@ import type {
   InstallProgress,
   LibraryEntry,
   PortConfig,
+  SelfUpdateInfo,
+  SelfUpdateProgress,
   SettingsData,
   UpdateCheckResult,
 } from '../shared/types';
@@ -29,6 +31,8 @@ interface AppState {
   installs: Record<string, InstallProgress>;
   busyInstalls: Record<string, boolean>;
   updateInfo: UpdateCheckResult[];
+  selfUpdate: SelfUpdateInfo | null;
+  selfUpdateProgress: SelfUpdateProgress | null;
   checkingUpdates: boolean;
   settings: SettingsData | null;
   logs: Record<string, LogLine[]>;
@@ -42,6 +46,7 @@ interface AppState {
   refresh(): Promise<void>;
   setView(view: 'library' | 'catalog'): void;
   checkUpdates(force: boolean): Promise<void>;
+  installUpdate(): Promise<void>;
   install(portId: string): Promise<void>;
   cancelInstall(portId: string): Promise<void>;
   attachRom(portId: string): Promise<boolean>;
@@ -74,6 +79,8 @@ export const useStore = create<AppState>()((set, get) => ({
   installs: {},
   busyInstalls: {},
   updateInfo: [],
+  selfUpdate: null,
+  selfUpdateProgress: null,
   checkingUpdates: false,
   settings: null,
   logs: {},
@@ -99,6 +106,8 @@ export const useStore = create<AppState>()((set, get) => ({
         if (event.progress.stage === 'done' || event.progress.stage === 'cancelled') {
           void get().refresh();
         }
+      } else if (event.type === 'self-update-progress') {
+        set({ selfUpdateProgress: event.progress });
       } else if (event.type === 'launch-output') {
         set((state) => ({
           logs: {
@@ -145,8 +154,9 @@ export const useStore = create<AppState>()((set, get) => ({
     if (catalog.ok) set({ catalog: catalog.data });
     if (settings.ok) set({ settings: settings.data });
     if (updates.ok) {
-      set({ updateInfo: updates.data });
-      const hasUpdate = updates.data.some((u) => u.hasUpdate && !u.error);
+      set({ updateInfo: updates.data.ports, selfUpdate: updates.data.self });
+      const hasUpdate =
+        updates.data.ports.some((u) => u.hasUpdate && !u.error) || updates.data.self.hasUpdate;
       if (hasUpdate) {
         set({ updateDialogOpen: true });
       }
@@ -184,12 +194,21 @@ export const useStore = create<AppState>()((set, get) => ({
     const result = await api.checkForUpdates(force);
     set({ checkingUpdates: false });
     if (result.ok) {
-      set({ updateInfo: result.data });
-      const hasUpdate = result.data.some((u) => u.hasUpdate && !u.error);
+      set({ updateInfo: result.data.ports, selfUpdate: result.data.self });
+      const hasUpdate =
+        result.data.ports.some((u) => u.hasUpdate && !u.error) || result.data.self.hasUpdate;
       if (hasUpdate && force) {
         set({ updateDialogOpen: true });
       }
     } else {
+      get().pushError(result.error);
+    }
+  },
+
+  async installUpdate() {
+    set({ selfUpdateProgress: null });
+    const result = await api.installUpdate();
+    if (!result.ok) {
       get().pushError(result.error);
     }
   },

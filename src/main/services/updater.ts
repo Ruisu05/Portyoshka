@@ -1,8 +1,9 @@
 import { AppError } from './errors';
 import { getLatestRelease } from './github';
 import { getPort, visiblePortsOn } from '../registry';
+import { SELF_REPO } from './selfUpdater';
 import type { DatabaseBundle } from '../db';
-import type { Platform, UpdateCheckResult } from '../../shared/types';
+import type { Platform, SelfUpdateInfo, UpdateCheckResult } from '../../shared/types';
 
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 
@@ -96,4 +97,37 @@ export async function checkForUpdates(deps: UpdateDeps, force = false): Promise<
     }
   }
   return results;
+}
+
+export async function checkForSelfUpdate(
+  deps: UpdateDeps,
+  currentVersion: string,
+  force = false,
+): Promise<SelfUpdateInfo> {
+  const cache = force ? null : readCache(deps, SELF_REPO);
+  try {
+    let latestTag: string;
+    if (cache && Date.now() - cache.at < CACHE_TTL_MS) {
+      latestTag = cache.tag;
+    } else {
+      const release = await getLatestRelease(SELF_REPO, deps.getGithubToken() ?? undefined);
+      latestTag = release.tag;
+      writeCache(deps, SELF_REPO, release.tag);
+    }
+    return {
+      currentVersion,
+      latestVersion: latestTag,
+      hasUpdate: compareVersions(latestTag, currentVersion) > 0,
+      error: null,
+    };
+  } catch (err) {
+    const appErr =
+      err instanceof AppError ? err : new AppError('UNKNOWN', 'Update check failed', (err as Error).message);
+    return {
+      currentVersion,
+      latestVersion: '',
+      hasUpdate: false,
+      error: { code: appErr.code, message: appErr.message, detail: appErr.detail },
+    };
+  }
 }

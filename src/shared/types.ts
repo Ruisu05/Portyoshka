@@ -133,6 +133,28 @@ export interface UpdateCheckResult {
   error: AppErrorInfo | null;
 }
 
+export interface SelfUpdateInfo {
+  currentVersion: string;
+  latestVersion: string;
+  hasUpdate: boolean;
+  error: AppErrorInfo | null;
+}
+
+export interface UpdateCheckResponse {
+  ports: UpdateCheckResult[];
+  self: SelfUpdateInfo;
+}
+
+export type SelfUpdateStage = 'downloading' | 'preparing' | 'opening';
+
+export interface SelfUpdateProgress {
+  stage: SelfUpdateStage;
+  percent: number;
+  downloadedBytes: number;
+  totalBytes: number;
+  message?: string;
+}
+
 export interface SettingsData {
   rootInstallDir: string;
   githubToken: string;
@@ -141,6 +163,7 @@ export interface SettingsData {
 
 export type MainEvent =
   | { type: 'install-progress'; progress: InstallProgress }
+  | { type: 'self-update-progress'; progress: SelfUpdateProgress }
   | { type: 'launch-output'; portId: string; stream: 'stdout' | 'stderr'; data: string }
   | { type: 'launch-exit'; portId: string; code: number | null; signal: string | null; failed: boolean }
   | { type: 'launch-restarted'; portId: string };
@@ -148,7 +171,8 @@ export type MainEvent =
 export interface PortyoshkaApi {
   getLibrary(): Promise<IpcResult<LibraryEntry[]>>;
   getCatalog(): Promise<IpcResult<PortConfig[]>>;
-  checkForUpdates(force?: boolean): Promise<IpcResult<UpdateCheckResult[]>>;
+  checkForUpdates(force?: boolean): Promise<IpcResult<UpdateCheckResponse>>;
+  installUpdate(): Promise<IpcResult<null>>;
   startInstall(portId: string): Promise<IpcResult<null>>;
   cancelInstall(portId: string): Promise<IpcResult<null>>;
   pickRom(portId: string): Promise<IpcResult<RomStatus>>;

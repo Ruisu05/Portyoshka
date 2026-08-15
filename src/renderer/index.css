@@ -555,6 +555,19 @@ body {
   cursor: pointer;
 }
 
+.self-update-block {
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.self-update-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .update-name {
   flex: 1;
   font-weight: 500;

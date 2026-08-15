@@ -7,7 +7,7 @@ import type {
   PortyoshkaApi,
   RomStatus,
   SettingsData,
-  UpdateCheckResult,
+  UpdateCheckResponse,
 } from './shared/types';
 
 const invoke = <T,>(channel: string, ...args: unknown[]): Promise<IpcResult<T>> =>
@@ -16,7 +16,8 @@ const invoke = <T,>(channel: string, ...args: unknown[]): Promise<IpcResult<T>> 
 const api: PortyoshkaApi = {
   getLibrary: () => invoke<LibraryEntry[]>('library:get'),
   getCatalog: () => invoke<PortConfig[]>('catalog:get'),
-  checkForUpdates: (force = false) => invoke<UpdateCheckResult[]>('updates:check', force),
+  checkForUpdates: (force = false) => invoke<UpdateCheckResponse>('updates:check', force),
+  installUpdate: () => invoke<null>('update:install'),
   startInstall: (portId) => invoke<null>('install:start', portId),
   cancelInstall: (portId) => invoke<null>('install:cancel', portId),
   pickRom: (portId) => invoke<RomStatus>('rom:pick', portId),

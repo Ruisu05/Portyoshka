@@ -1,4 +1,4 @@
-import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
+import { ipcMain, dialog, shell, app, BrowserWindow } from 'electron';
 import fs from 'node:fs';
 import type { DatabaseBundle } from './db';
 import type { AppPaths } from './paths';
@@ -6,7 +6,8 @@ import type { LaunchManager } from './services/launcher';
 import type { SettingsStore } from './services/settings';
 import { installPort } from './services/installer';
 import { importRomForPort } from './services/romLibrary';
-import { checkForUpdates } from './services/updater';
+import { checkForUpdates, checkForSelfUpdate } from './services/updater';
+import { performSelfUpdate } from './services/selfUpdater';
 import { buildLibrary, buildCatalog, getEntryPort } from './services/library';
 import { uninstallPort } from './services/uninstall';
 import { AppError, asAppError } from './services/errors';
@@ -18,7 +19,9 @@ import type {
   Platform,
   PortConfig,
   RomStatus,
+  SelfUpdateProgress,
   SettingsData,
+  UpdateCheckResponse,
   UpdateCheckResult,
 } from '../shared/types';
 
@@ -123,7 +126,7 @@ export function registerIpc(deps: IpcDeps): void {
     }
   });
 
-  ipcMain.handle('updates:check', async (_event, force: boolean): Promise<IpcResult<UpdateCheckResult[]>> => {
+  ipcMain.handle('updates:check', async (_event, force: boolean): Promise<IpcResult<UpdateCheckResponse>> => {
     try {
       updateResults = await checkForUpdates(
         {
@@ -133,7 +136,32 @@ export function registerIpc(deps: IpcDeps): void {
         },
         Boolean(force),
       );
-      return ok(updateResults);
+      const self = await checkForSelfUpdate(
+        {
+          platform: deps.platform,
+          db: deps.db,
+          getGithubToken: () => deps.settings.getGithubToken(),
+        },
+        app.getVersion(),
+        Boolean(force),
+      );
+      return ok({ ports: updateResults, self });
+    } catch (err) {
+      return fail(err);
+    }
+  });
+
+  ipcMain.handle('update:install', async (): Promise<IpcResult<null>> => {
+    try {
+      await performSelfUpdate({
+        platform: deps.platform,
+        paths: deps.paths,
+        getGithubToken: () => deps.settings.getGithubToken(),
+        emit: (progress: SelfUpdateProgress) => {
+          emit({ type: 'self-update-progress', progress });
+        },
+      });
+      return ok(null);
     } catch (err) {
       return fail(err);
     }

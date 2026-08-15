@@ -4,8 +4,11 @@ import { useStore } from '../store';
 export function UpdateDialog() {
   const updateInfo = useStore((s) => s.updateInfo);
   const library = useStore((s) => s.library);
+  const selfUpdate = useStore((s) => s.selfUpdate);
+  const selfUpdateProgress = useStore((s) => s.selfUpdateProgress);
   const setUpdateDialogOpen = useStore((s) => s.setUpdateDialogOpen);
   const install = useStore((s) => s.install);
+  const installUpdate = useStore((s) => s.installUpdate);
   const [selected, setSelected] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     for (const u of updateInfo) {
@@ -18,6 +21,7 @@ export function UpdateDialog() {
   const updatable = updateInfo.filter((u) => u.hasUpdate);
   const nameById = new Map(library.map((l) => [l.port.id, l.port.displayName]));
   const errors = updateInfo.filter((u) => u.error);
+  const selfBusy = selfUpdateProgress !== null && working;
 
   const updateSelected = async () => {
     setWorking(true);
@@ -30,6 +34,12 @@ export function UpdateDialog() {
     setUpdateDialogOpen(false);
   };
 
+  const updateSelf = async () => {
+    setWorking(true);
+    await installUpdate();
+    setWorking(false);
+  };
+
   return (
     <div className="overlay">
       <div className="modal">
@@ -40,7 +50,47 @@ export function UpdateDialog() {
             {errors.map((e) => e.error?.message).join(' ')}
           </div>
         )}
-        {updatable.length === 0 && <div className="modal-text">No updates available.</div>}
+
+        {selfUpdate?.hasUpdate && (
+          <div className="self-update-block">
+            <div className="self-update-row">
+              <span className="update-name">Portyoshka</span>
+              <span className="update-versions">
+                {selfUpdate.currentVersion} → {selfUpdate.latestVersion}
+              </span>
+              <button
+                className="btn btn-accent"
+                disabled={working}
+                onClick={() => void updateSelf()}
+              >
+                {selfBusy ? 'Updating…' : 'Update now'}
+              </button>
+            </div>
+            {selfBusy && selfUpdateProgress && (
+              <div className="progress-block">
+                <div className="progress-stage">
+                  {selfUpdateProgress.stage === 'downloading' && 'Downloading update…'}
+                  {selfUpdateProgress.stage === 'preparing' && 'Preparing…'}
+                  {selfUpdateProgress.stage === 'opening' && 'Opening installer…'}
+                </div>
+                <div className="progress-bar">
+                  <div
+                    className={`progress-fill ${selfUpdateProgress.totalBytes === 0 ? 'indeterminate' : ''}`}
+                    style={
+                      selfUpdateProgress.totalBytes > 0
+                        ? { width: `${selfUpdateProgress.percent}%` }
+                        : undefined
+                    }
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {updatable.length === 0 && !selfUpdate?.hasUpdate && (
+          <div className="modal-text">No updates available.</div>
+        )}
         {updatable.map((u) => (
           <label key={u.portId} className="update-row">
             <input
@@ -58,13 +108,15 @@ export function UpdateDialog() {
           <button className="btn btn-ghost" disabled={working} onClick={() => setUpdateDialogOpen(false)}>
             Skip
           </button>
-          <button
-            className="btn btn-accent"
-            disabled={working || !Object.values(selected).some(Boolean)}
-            onClick={() => void updateSelected()}
-          >
-            Update selected
-          </button>
+          {updatable.length > 0 && (
+            <button
+              className="btn btn-accent"
+              disabled={working || !Object.values(selected).some(Boolean)}
+              onClick={() => void updateSelected()}
+            >
+              Update selected
+            </button>
+          )}
         </div>
       </div>
     </div>

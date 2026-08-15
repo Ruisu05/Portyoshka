@@ -15,6 +15,7 @@ export function App() {
   const checkingUpdates = useStore((s) => s.checkingUpdates);
   const setSettingsDialogOpen = useStore((s) => s.setSettingsDialogOpen);
   const updateInfo = useStore((s) => s.updateInfo);
+  const selfUpdate = useStore((s) => s.selfUpdate);
   const updateDialogOpen = useStore((s) => s.updateDialogOpen);
   const settingsDialogOpen = useStore((s) => s.settingsDialogOpen);
   const romPrompt = useStore((s) => s.romPrompt);
@@ -24,7 +25,8 @@ export function App() {
     void init();
   }, [init]);
 
-  const updatableCount = updateInfo.filter((u) => u.hasUpdate).length;
+  const updatableCount =
+    updateInfo.filter((u) => u.hasUpdate).length + (selfUpdate?.hasUpdate ? 1 : 0);
 
   return (
     <div className="app">
