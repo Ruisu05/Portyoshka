@@ -4,11 +4,20 @@ A desktop launcher for fan-made native PC ports of classic console games. Instal
 
 Built with Electron, React, TypeScript, and Zustand.
 
+## Screenshots
+
+![Portyoshka library](screenshots/library.png)
+
+> Keep this up to date when the UI changes noticeably — drop a new PNG at `screenshots/library.png` and update the embed.
+
 ## Features
 
-- **One-click install** — picks the right release asset for your OS and platform, downloads it, verifies it, and extracts it
+- **One-click install** — picks the right release asset for your OS and platform, downloads it, verifies it, and extracts it; multiple installs queue up one at a time
 - **ROM handling** — guides you through providing a legally obtained ROM for each game and validates its hash where the port publishes one
 - **Updates** — checks the port's GitHub releases and updates in place, preserving your saves and extracted game data
+- **Self-updater** — Portyoshka checks its own GitHub releases on launch (and via the "Check for updates" button) and can update itself: AppImage downloads and replaces itself, Windows launches the new installer
+- **Playtime tracking** — records play time per port and shows when you last played
+- **Add to Steam** — one click adds a port to your Steam library with its icon, toggles to remove
 - **Clean launches** — launches, monitors, and kills the port's processes properly (handles AppImage FUSE quirks and child processes)
 - **Cross-platform** — Windows, macOS, and Linux
 
@@ -57,25 +66,26 @@ The short version:
 
 ## Making a release
 
-There is no auto-update for the launcher itself (updates are checked only for the installed ports), so each release is a manual GitHub Release with platform artifacts.
+Releases are built and published automatically by GitHub Actions when you push a `v*` tag — and the launcher's self-updater picks them up, so users on the AppImage update in place.
 
 ### 1. Bump the version
 
 Edit `version` in `package.json` and add a `## <version>` section to `CHANGELOG.md` (its bullets become the release notes), then commit and tag. (CI overrides the version from the tag at build time, so artifacts always match the release number — but bump it anyway so local builds are correct too.)
 
 ```sh
-git tag v1.0.0
-git push origin main --tags
+git tag v1.2.0
+git push origin main
+git push origin v1.2.0
 ```
 
 Pushing a `v*` tag triggers the GitHub Actions workflow, which builds all artifacts, renames them with the OS in the filename, and publishes the GitHub Release automatically:
 
 | Platform | File | What it is |
 | --- | --- | --- |
-| Windows | `Portyoshka-1.0.0-Windows-Setup.exe` | Squirrel installer |
-| Linux | `Portyoshka-1.0.0-Linux.AppImage` | Portable, run on any distro (needs FUSE; Portyoshka itself auto-extracts AppImages it launches) |
-| Linux | `Portyoshka-1.0.0-Linux.deb` | Debian/Ubuntu package |
-| Linux | `Portyoshka-1.0.0-Linux.rpm` | Fedora/RHEL package |
+| Windows | `Portyoshka-1.2.0-Windows-Setup.exe` | Squirrel installer |
+| Linux | `Portyoshka-1.2.0-Linux.AppImage` | Portable, run on any distro (needs FUSE; Portyoshka auto-extracts the AppImages it launches) |
+| Linux | `Portyoshka-1.2.0-Linux.deb` | Debian/Ubuntu package |
+| Linux | `Portyoshka-1.2.0-Linux.rpm` | Fedora/RHEL package |
 
 macOS builds are not automated yet — run `npm run make` on a Mac (the ZIP maker targets darwin).
 
@@ -95,11 +105,11 @@ Artifacts land in `out/make/`. Building the AppImage locally needs `mksquashfs` 
 The workflow publishes releases automatically. If you do it by hand instead:
 
 1. Push the tag, then go to **Releases → Draft a new release** (or use `gh release create`).
-2. Choose the tag, title it `v1.0.0`.
+2. Choose the tag, title it `v1.2.0`.
 3. Attach every artifact from `out/make/`.
 4. Publish. Users install the right artifact for their OS.
 
-### Known caveats for a first release
+### Known caveats
 
 - **Unsigned binaries**: without code signing, Windows shows a SmartScreen "unknown publisher" warning and macOS shows a "damaged/unverified" warning (users right-click → Open). Electron Forge also warns about the missing `authors` field. This is expected for a hobby project; signing certificates can be added later.
 - **Electron binary bloat**: the download of `electron` in CI is large (~100 MB per platform) — builds take a few minutes.
