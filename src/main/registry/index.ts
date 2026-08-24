@@ -6,6 +6,7 @@ import { ghostship } from './ports/ghostship';
 import { spaghettiKart } from './ports/spaghettiKart';
 import { lighthouse } from './ports/lighthouse';
 import { dusklight } from './ports/dusklight';
+import { gen1recomp } from './ports/gen1recomp';
 
 export const REGISTRY_PORTS: PortConfig[] = [
   shipwright,
@@ -15,6 +16,7 @@ export const REGISTRY_PORTS: PortConfig[] = [
   spaghettiKart,
   lighthouse,
   dusklight,
+  gen1recomp,
 ];
 
 export function getPort(id: string): PortConfig | undefined {

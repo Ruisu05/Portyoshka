@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.0
+- Added Gen1Recomp (Pokémon Red, Blue & Yellow) to the catalog
+
 ## 1.1.2
 - Added playtime tracking per port
 - Added "Add to Steam" button (uses the port's icon, toggles to remove)

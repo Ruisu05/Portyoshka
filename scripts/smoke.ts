@@ -204,7 +204,7 @@ z.close()
   }
 
   console.log('6. install remaining registry ports');
-  const remainingPorts = ['starship', 'ghostship', 'spaghetti-kart', 'lighthouse', 'dusklight'];
+  const remainingPorts = ['starship', 'ghostship', 'spaghetti-kart', 'lighthouse', 'dusklight', 'gen1recomp'];
   for (const portId of remainingPorts) {
     try {
       const installed = await installPort(installDeps, portId);
