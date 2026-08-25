@@ -25,6 +25,11 @@ export const spaghettiKart: PortConfig = {
     handling: 'native-wizard',
   },
   preserveOnUpdate: ['spaghettify.cfg.json', 'spaghettify.cfg.ini', '*.o2r', '*.otr', 'mods/**'],
+  mods: {
+    source: { kind: 'gamebanana', gameId: 22970 },
+    layout: 'flat-files',
+    modFileExtensions: ['.otr', '.o2r'],
+  },
   notes:
     'Verified against 1.0.0: Linux zip contains spaghetti.appimage. Supports the US MK64 ROM only. The in-game ROM picker on Linux needs zenity or kdialog installed.',
 };

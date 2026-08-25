@@ -30,6 +30,11 @@ export const lighthouse: PortConfig = {
     handling: 'native-wizard',
   },
   preserveOnUpdate: ['lighthouse.cfg.json', 'lighthouse.cfg.ini', '*.o2r', '*.otr', 'mods/**'],
+  mods: {
+    source: { kind: 'gamebanana', gameId: 25172 },
+    layout: 'flat-files',
+    modFileExtensions: ['.otr', '.o2r'],
+  },
   notes:
     'Verified against 1.0.3: Linux zip contains lighthouse.appimage. Supports US 1.0, US 1.1, JP and PAL Banjo-Kazooie ROMs; the game runs its own O2R extraction.',
 };

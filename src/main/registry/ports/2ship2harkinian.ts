@@ -35,6 +35,11 @@ export const twoShipTwoHarkinian: PortConfig = {
     'mods/**',
     'Randomizer/**',
   ],
+  mods: {
+    source: { kind: 'gamebanana', gameId: 20371 },
+    layout: 'flat-files',
+    modFileExtensions: ['.otr', '.o2r'],
+  },
   notes:
     'Verified against 5.0.0: Linux zip contains 2ship.appimage. ROM is placed next to the appimage; the game runs its own asset extraction on first launch.',
 };

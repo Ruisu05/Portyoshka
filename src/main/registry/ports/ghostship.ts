@@ -28,6 +28,11 @@ export const ghostship: PortConfig = {
     handling: 'native-wizard',
   },
   preserveOnUpdate: ['ghostship.cfg.json', 'ghostship.cfg.ini', '*.o2r', '*.otr', 'mods/**'],
+  mods: {
+    source: { kind: 'gamebanana', gameId: 24131 },
+    layout: 'flat-files',
+    modFileExtensions: ['.otr', '.o2r'],
+  },
   notes:
     'Verified against 2.0.0: Linux zip contains ghostship.appimage. Supports the US and JP SM64 ROMs; the game runs its own O2R extraction.',
 };

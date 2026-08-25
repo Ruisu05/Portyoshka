@@ -12,12 +12,14 @@ import { performSelfUpdate } from './services/selfUpdater';
 import { buildLibrary, buildCatalog, getEntryPort } from './services/library';
 import { uninstallPort } from './services/uninstall';
 import { addSteamShortcut, removeSteamShortcut } from './services/steamShortcuts';
+import { getMods, installMod, uninstallMod } from './services/mods';
 import { AppError, asAppError } from './services/errors';
 import type {
   IpcResult,
   InstallProgress,
   LibraryEntry,
   MainEvent,
+  ModCatalog,
   Platform,
   PortConfig,
   RomStatus,
@@ -309,6 +311,71 @@ export function registerIpc(deps: IpcDeps): void {
       }
       await shell.openExternal(`https://github.com/${port.repo}`);
       return ok(null);
+    } catch (err) {
+      return fail(err);
+    }
+  });
+
+  ipcMain.handle('shell:openExternal', async (_event, url: string): Promise<IpcResult<null>> => {
+    try {
+      if (typeof url !== 'string' || !/^https?:\/\//i.test(url)) {
+        return fail(new AppError('UNKNOWN', 'Invalid link'));
+      }
+      await shell.openExternal(url);
+      return ok(null);
+    } catch (err) {
+      return fail(err);
+    }
+  });
+
+  const modsDeps = () => ({ platform: deps.platform, paths: deps.paths });
+
+  const installedPortFor = (portId: string) => {
+    const port = getEntryPort(portId);
+    const installed = deps.db.ports.getInstalled(portId);
+    if (!port) {
+      return { error: new AppError('UNKNOWN', `Unknown port: ${portId}`) };
+    }
+    if (!port.mods) {
+      return { error: new AppError('UNKNOWN', 'This port has no mod support') };
+    }
+    if (!installed) {
+      return { error: new AppError('UNKNOWN', 'This port is not installed') };
+    }
+    return { port, installed };
+  };
+
+  ipcMain.handle('mods:get', async (_event, portId: string): Promise<IpcResult<ModCatalog>> => {
+    try {
+      const { port, installed, error } = installedPortFor(portId);
+      if (error || !port || !installed) {
+        return fail(error);
+      }
+      return ok(await getMods(modsDeps(), port, installed));
+    } catch (err) {
+      return fail(err);
+    }
+  });
+
+  ipcMain.handle('mods:install', async (_event, portId: string, modId: string): Promise<IpcResult<ModCatalog>> => {
+    try {
+      const { port, installed, error } = installedPortFor(portId);
+      if (error || !port || !installed) {
+        return fail(error);
+      }
+      return ok(await installMod(modsDeps(), port, installed, modId));
+    } catch (err) {
+      return fail(err);
+    }
+  });
+
+  ipcMain.handle('mods:uninstall', async (_event, portId: string, modId: string): Promise<IpcResult<ModCatalog>> => {
+    try {
+      const { port, installed, error } = installedPortFor(portId);
+      if (error || !port || !installed) {
+        return fail(error);
+      }
+      return ok(await uninstallMod(modsDeps(), port, installed, modId));
     } catch (err) {
       return fail(err);
     }

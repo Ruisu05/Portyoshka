@@ -33,6 +33,11 @@ export const starship: PortConfig = {
     'mods/**',
     'Randomizer/**',
   ],
+  mods: {
+    source: { kind: 'gamebanana', gameId: 21612 },
+    layout: 'flat-files',
+    modFileExtensions: ['.otr', '.o2r'],
+  },
   notes:
     'Verified against v2.0.0: Linux zip contains starship.appimage. Supports US 1.0 / US 1.1 ROMs; the game runs its own O2R extraction. No macOS release is published.',
 };

@@ -77,6 +77,7 @@ export function PortCard({ entry }: { entry: LibraryEntry }) {
   const openRomPrompt = useStore((s) => s.openRomPrompt);
   const toggleLog = useStore((s) => s.toggleLog);
   const visibleLogs = useStore((s) => s.visibleLogs);
+  const openMods = useStore((s) => s.openMods);
   const showFolder = useStore((s) => s.showFolder);
   const openRepo = useStore((s) => s.openRepo);
   const addToSteam = useStore((s) => s.addToSteam);
@@ -181,6 +182,11 @@ export function PortCard({ entry }: { entry: LibraryEntry }) {
         {entry.installed && !busy && !entry.port.noOutput && (
           <button className="btn btn-ghost" onClick={() => toggleLog(entry.port.id)}>
             {visibleLogs[entry.port.id] ? 'Hide output' : 'Output'}
+          </button>
+        )}
+        {entry.installed && !busy && entry.port.mods && (
+          <button className="btn btn-ghost" onClick={() => openMods(entry.port.id)}>
+            Mods
           </button>
         )}
         {romMissing && entry.installed && !busy && !running && (

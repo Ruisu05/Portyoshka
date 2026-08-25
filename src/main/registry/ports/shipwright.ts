@@ -52,6 +52,11 @@ export const shipwright: PortConfig = {
     'mods/**',
     'Randomizer/**',
   ],
+  mods: {
+    source: { kind: 'gamebanana', gameId: 16121 },
+    layout: 'flat-files',
+    modFileExtensions: ['.otr', '.o2r'],
+  },
   notes:
     'Verified against 9.2.3: Linux zip contains soh.appimage. ROM is placed next to the appimage; the game runs its own asset extraction on first launch.',
 };

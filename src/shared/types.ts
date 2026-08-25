@@ -14,6 +14,54 @@ export interface RomSpec {
   cliArg?: string;
 }
 
+export type ModSourceConfig =
+  | { kind: 'index'; indexUrl: string; fallbackIndexUrl?: string }
+  | { kind: 'gamebanana'; gameId: number };
+
+export interface PortModsConfig {
+  source: ModSourceConfig;
+  layout: 'folder-per-mod' | 'flat-files';
+  appDataFolder?: string;
+  portableMarker?: string;
+  modFileExtensions?: string[];
+}
+
+export interface ModZipInfo {
+  name?: string;
+  url?: string;
+  size?: number;
+}
+
+export interface ModReleaseInfo {
+  version?: string;
+  tag?: string;
+  zip?: ModZipInfo | null;
+}
+
+export interface ModIndexEntry {
+  id: string;
+  title: string;
+  author?: string;
+  version?: string;
+  summary?: string;
+  categories?: string[];
+  downloadURL?: string;
+  latest?: ModReleaseInfo | null;
+  thumbnail?: string;
+  updatedAt?: number;
+  pageUrl?: string;
+}
+
+export interface ModInfo extends ModIndexEntry {
+  installedVersion: string | null;
+  installedUpdatedAt: number | null;
+}
+
+export interface ModCatalog {
+  categories: string[];
+  mods: ModInfo[];
+}
+
 export interface PortConfig {
   id: string;
   displayName: string;
@@ -26,6 +74,7 @@ export interface PortConfig {
   preserveOnUpdate: string[];
   notes?: string;
   noOutput?: boolean;
+  mods?: PortModsConfig;
 }
 
 export interface ReleaseAsset {
@@ -193,6 +242,10 @@ export interface PortyoshkaApi {
   removeSteamShortcut(portId: string): Promise<IpcResult<null>>;
   uninstall(portId: string, keepSettings: boolean): Promise<IpcResult<null>>;
   exportLog(portId: string, content: string): Promise<IpcResult<string | null>>;
+  openExternal(url: string): Promise<IpcResult<null>>;
+  getMods(portId: string): Promise<IpcResult<ModCatalog>>;
+  installMod(portId: string, modId: string): Promise<IpcResult<ModCatalog>>;
+  uninstallMod(portId: string, modId: string): Promise<IpcResult<ModCatalog>>;
   getSettings(): Promise<IpcResult<SettingsData>>;
   setSettings(patch: Partial<Pick<SettingsData, 'rootInstallDir' | 'githubToken'>>): Promise<IpcResult<SettingsData>>;
   setPortDirOverride(portId: string, dir: string | null): Promise<IpcResult<SettingsData>>;

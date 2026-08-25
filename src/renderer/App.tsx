@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useStore } from './store';
 import { LibraryView, CatalogView } from './components/Views';
+import { ModsView } from './components/ModsView';
 import { UpdateDialog } from './components/UpdateDialog';
 import { RomPromptDialog } from './components/RomPromptDialog';
 import { SettingsDialog } from './components/SettingsDialog';
@@ -11,6 +12,7 @@ export function App() {
   const init = useStore((s) => s.init);
   const view = useStore((s) => s.view);
   const setView = useStore((s) => s.setView);
+  const openMods = useStore((s) => s.openMods);
   const checkUpdates = useStore((s) => s.checkUpdates);
   const checkingUpdates = useStore((s) => s.checkingUpdates);
   const setSettingsDialogOpen = useStore((s) => s.setSettingsDialogOpen);
@@ -20,6 +22,7 @@ export function App() {
   const settingsDialogOpen = useStore((s) => s.settingsDialogOpen);
   const romPrompt = useStore((s) => s.romPrompt);
   const uninstallPrompt = useStore((s) => s.uninstallPrompt);
+  const hasModsPorts = useStore((s) => s.library.some((e) => e.installed && e.port.mods));
 
   useEffect(() => {
     void init();
@@ -39,6 +42,11 @@ export function App() {
           <button className={`btn btn-nav ${view === 'catalog' ? 'active' : ''}`} onClick={() => setView('catalog')}>
             Add a port
           </button>
+          {hasModsPorts && (
+            <button className={`btn btn-nav ${view === 'mods' ? 'active' : ''}`} onClick={() => openMods(null)}>
+              Mods
+            </button>
+          )}
         </nav>
         <div className="header-spacer" />
         <button
@@ -55,7 +63,9 @@ export function App() {
         </button>
       </header>
 
-      <main className="main">{view === 'library' ? <LibraryView /> : <CatalogView />}</main>
+      <main className="main">
+        {view === 'library' ? <LibraryView /> : view === 'catalog' ? <CatalogView /> : <ModsView />}
+      </main>
 
       {view === 'library' && (
         <button className="fab" title="Add a port" onClick={() => setView('catalog')}>

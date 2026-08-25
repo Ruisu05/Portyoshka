@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+- Mods page: browse a mod directory with search and categories, install, update and remove mods, and open the mod's page (Gen1Recomp community index; GameBanana for Ship of Harkinian, 2 Ship 2 Harkinian, Starship, Ghostship, SpaghettiKart and Lighthouse — non-mod submissions filtered out)
+- Layout now adapts to the window size
+
 ## 1.2.1
 - Hid the Output button for ports that produce no console output (Gen1Recomp)
 

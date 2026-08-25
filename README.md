@@ -17,6 +17,7 @@ Built with Electron, React, TypeScript, and Zustand.
 - **Updates** — checks the port's GitHub releases and updates in place, preserving your saves and extracted game data
 - **Self-updater** — Portyoshka checks its own GitHub releases on launch (and via the "Check for updates" button) and can update itself: AppImage downloads and replaces itself, Windows launches the new installer
 - **Playtime tracking** — records play time per port and shows when you last played
+- **Mods** — browse a mod directory with search and categories, install, update and remove mods, and jump to the mod's page (GameBanana for the HarbourMasters ports, the community index for Gen1Recomp)
 - **Add to Steam** — one click adds a port to your Steam library with its icon, toggles to remove
 - **Clean launches** — launches, monitors, and kills the port's processes properly (handles AppImage FUSE quirks and child processes)
 - **Cross-platform** — Windows, macOS, and Linux
@@ -32,7 +33,7 @@ Built with Electron, React, TypeScript, and Zustand.
 | [Spaghetti Kart](https://github.com/HarbourMasters/SpaghettiKart) | Mario Kart 64 | US MK64 ROM |
 | [Lighthouse](https://github.com/HarbourMasters/Lighthouse) | Banjo-Kazooie | US 1.0 / 1.1, JP, or PAL B-K ROM |
 | [Dusklight](https://github.com/TwilitRealm/dusklight) | The Legend of Zelda: Twilight Princess | GameCube ISO (accepted by extension, not hash-verified) |
-| [Gen1Recomp](https://github.com/bryanthaboi/gen1recomp) | Pokémon Red, Blue & Yellow | None — the game imports your US Red/Blue/Yellow (or Gold/Silver) ROM itself on first launch |
+| [Gen1Recomp](https://github.com/bryanthaboi/gen1recomp) | Pokémon Red, Blue & Yellow | None — the game imports your US Red/Blue/Yellow (or Gold/Silver/Crystal) ROM itself through its own launcher |
 
 Ports are listed on the platform where they publish builds — e.g. some ports have no macOS release, so they won't appear on macOS.
 

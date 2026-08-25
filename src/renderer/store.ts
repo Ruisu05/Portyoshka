@@ -5,6 +5,7 @@ import type {
   AppErrorInfo,
   InstallProgress,
   LibraryEntry,
+  ModCatalog,
   PortConfig,
   SelfUpdateInfo,
   SelfUpdateProgress,
@@ -26,7 +27,7 @@ export interface ToastItem {
 }
 
 interface AppState {
-  view: 'library' | 'catalog';
+  view: 'library' | 'catalog' | 'mods';
   library: LibraryEntry[];
   catalog: PortConfig[];
   installs: Record<string, InstallProgress>;
@@ -73,6 +74,16 @@ interface AppState {
   exportLog(portId: string): Promise<void>;
   toggleLog(portId: string): void;
   visibleLogs: Record<string, boolean>;
+  modsPortId: string | null;
+  modsCatalog: Record<string, ModCatalog>;
+  modsLoading: Record<string, boolean>;
+  modsBusy: Record<string, boolean>;
+  openMods(portId: string | null): void;
+  setModsPort(portId: string): void;
+  refreshMods(portId: string): Promise<void>;
+  installMod(portId: string, modId: string): Promise<void>;
+  uninstallMod(portId: string, modId: string): Promise<void>;
+  openModPage(url: string): Promise<void>;
 }
 
 export const useStore = create<AppState>()((set, get) => ({
@@ -94,6 +105,11 @@ export const useStore = create<AppState>()((set, get) => ({
   updateDialogOpen: false,
   settingsDialogOpen: false,
   visibleLogs: {},
+
+  modsPortId: null,
+  modsCatalog: {},
+  modsLoading: {},
+  modsBusy: {},
 
   async init() {
     api.onEvent((event) => {
@@ -442,5 +458,65 @@ export const useStore = create<AppState>()((set, get) => ({
     set((state) => ({
       visibleLogs: { ...state.visibleLogs, [portId]: !(state.visibleLogs[portId] ?? false) },
     }));
+  },
+
+  openMods(portId) {
+    const ports = get().library.filter((e) => e.installed && e.port.mods);
+    const selected = portId ?? get().modsPortId ?? ports[0]?.port.id ?? null;
+    const valid = ports.some((e) => e.port.id === selected);
+    const target = valid ? selected : (ports[0]?.port.id ?? null);
+    set({ view: 'mods', modsPortId: target });
+    if (target) {
+      void get().refreshMods(target);
+    }
+  },
+
+  setModsPort(portId) {
+    set({ modsPortId: portId });
+    void get().refreshMods(portId);
+  },
+
+  async refreshMods(portId) {
+    set((state) => ({ modsLoading: { ...state.modsLoading, [portId]: true } }));
+    const result = await api.getMods(portId);
+    set((state) => ({ modsLoading: { ...state.modsLoading, [portId]: false } }));
+    if (result.ok) {
+      set((state) => ({ modsCatalog: { ...state.modsCatalog, [portId]: result.data } }));
+    } else {
+      get().pushError(result.error);
+    }
+  },
+
+  async installMod(portId, modId) {
+    set((state) => ({ modsBusy: { ...state.modsBusy, [portId]: true } }));
+    const result = await api.installMod(portId, modId);
+    set((state) => ({ modsBusy: { ...state.modsBusy, [portId]: false } }));
+    if (result.ok) {
+      set((state) => ({ modsCatalog: { ...state.modsCatalog, [portId]: result.data } }));
+      const mod = result.data.mods.find((m) => m.id === modId);
+      get().pushSuccess(`${mod?.title ?? modId} installed`);
+    } else {
+      get().pushError(result.error);
+    }
+  },
+
+  async uninstallMod(portId, modId) {
+    set((state) => ({ modsBusy: { ...state.modsBusy, [portId]: true } }));
+    const result = await api.uninstallMod(portId, modId);
+    set((state) => ({ modsBusy: { ...state.modsBusy, [portId]: false } }));
+    if (result.ok) {
+      set((state) => ({ modsCatalog: { ...state.modsCatalog, [portId]: result.data } }));
+      const mod = result.data.mods.find((m) => m.id === modId);
+      get().pushSuccess(`${mod?.title ?? modId} removed`);
+    } else {
+      get().pushError(result.error);
+    }
+  },
+
+  async openModPage(url) {
+    const result = await api.openExternal(url);
+    if (!result.ok) {
+      get().pushError(result.error);
+    }
   },
 }));
