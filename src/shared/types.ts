@@ -25,6 +25,7 @@ export interface PortConfig {
   rom: RomSpec;
   preserveOnUpdate: string[];
   notes?: string;
+  noOutput?: boolean;
 }
 
 export interface ReleaseAsset {

@@ -126,14 +126,16 @@ export const useStore = create<AppState>()((set, get) => ({
           },
         }));
         if (event.failed) {
-          const name =
-            get().library.find((l) => l.port.id === event.portId)?.port.displayName ?? event.portId;
+          const entry = get().library.find((l) => l.port.id === event.portId);
+          const name = entry?.port.displayName ?? event.portId;
           const how = event.signal
             ? `was killed by ${event.signal}`
             : `exited with code ${event.code ?? 'unknown'}`;
           get().pushError({
             code: 'LAUNCH_FAILED',
-            message: `${name} ${how}. Open "Output" on the card for details.`,
+            message: entry?.port.noOutput
+              ? `${name} ${how}.`
+              : `${name} ${how}. Open "Output" on the card for details.`,
           });
         }
         void get().refresh();

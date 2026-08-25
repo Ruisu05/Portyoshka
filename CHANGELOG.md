@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.1
+- Hid the Output button for ports that produce no console output (Gen1Recomp)
+
 ## 1.2.0
 - Added Gen1Recomp (Pokémon Red, Blue & Yellow) to the catalog
 

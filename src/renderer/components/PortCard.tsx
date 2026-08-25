@@ -178,7 +178,7 @@ export function PortCard({ entry }: { entry: LibraryEntry }) {
         <button className={`btn btn-${primary.kind}`} onClick={primary.action}>
           {primary.label}
         </button>
-        {entry.installed && !busy && (
+        {entry.installed && !busy && !entry.port.noOutput && (
           <button className="btn btn-ghost" onClick={() => toggleLog(entry.port.id)}>
             {visibleLogs[entry.port.id] ? 'Hide output' : 'Output'}
           </button>

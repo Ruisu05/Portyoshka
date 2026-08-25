@@ -31,6 +31,7 @@ export const gen1recomp: PortConfig = {
     'assets/generated/**',
     'mods/**',
   ],
+  noOutput: true,
   notes:
-    'Verified against v0.2.20: the Linux zip contains gen1recomp-x86_64.AppImage; the Windows zip nests the exe in gen1recomp-win64/. The game imports the ROM itself (US Red/Blue/Yellow/Gold/Silver) and keeps saves in the OS app data dir unless portable.txt is dropped next to the game.',
+    'Verified against v0.2.24: the Linux zip contains gen1recomp-x86_64.AppImage; the Windows zip nests the exe in gen1recomp-win64/; the macOS zip contains gen1recomp.app. The game imports the ROM itself (US Red/Blue/Yellow/Gold/Silver/Crystal) on first launch and keeps saves in the OS app data dir unless portable.txt is dropped next to the game. It prints nothing to stdout/stderr, hence no Output button. Windows Defender may flag the exe as a false positive (official LÖVE runtime).',
 };
