@@ -37,7 +37,7 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y rpm squashfs-tools
       - name: Prepare Windows signing certificate
-        if: runner.os == 'Windows' && secrets.WINDOWS_CERT_PFX != ''
+        if: runner.os == 'Windows' && env.WINDOWS_CERT_PFX != ''
         shell: bash
         env:
           WINDOWS_CERT_PFX: ${{ secrets.WINDOWS_CERT_PFX }}
