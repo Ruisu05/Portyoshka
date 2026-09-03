@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.1
+- Windows: optional Authenticode signing for the app and installer so Smart App Control / SmartScreen stops blocking it (set WINDOWS_CERT_PFX / WINDOWS_CERT_PASSWORD secrets, or WINDOWS_CERT_FILE / WINDOWS_CERT_PASSWORD locally)
+
 ## 1.3.0
 - Mods page: browse a mod directory with search and categories, install, update and remove mods, and open the mod's page (Gen1Recomp community index; GameBanana for Ship of Harkinian, 2 Ship 2 Harkinian, Starship, Ghostship, SpaghettiKart and Lighthouse — non-mod submissions filtered out)
 - Layout now adapts to the window size

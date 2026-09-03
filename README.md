@@ -43,6 +43,19 @@ Ports are listed on the platform where they publish builds — e.g. some ports h
 - Windows: nothing extra. Linux: if your distro lacks FUSE, AppImages still run (Portyoshka auto-extracts them). Ubuntu users on some ports may need `zenity`/`kdialog` for in-game ROM pickers.
 - 4+ GB free disk per port — the ports and their extracted assets are large.
 
+## Windows Smart App Control
+
+Windows 11's Smart App Control (and SmartScreen on older Windows) can block unsigned executables. The durable fix is Authenticode code signing — signed builds pass both.
+
+Releases are signed automatically when the repo has these secrets:
+
+- `WINDOWS_CERT_PFX` — your code signing certificate (`.pfx`) encoded as base64
+- `WINDOWS_CERT_PASSWORD` — the certificate password
+
+The release workflow decodes the certificate and signs both the app and the installer. To sign locally instead, set `WINDOWS_CERT_FILE` (path to the `.pfx`) and `WINDOWS_CERT_PASSWORD` before `npm run make`. An EV (Extended Validation) certificate gets instant reputation; a standard one builds it over time.
+
+For end users stuck on an unsigned dev build: right-click the downloaded file → Properties → check **Unblock**, or run it via Windows Security → App & browser control → Smart App Control settings (turning Smart App Control off is permanent on that device).
+
 ## Development
 
 ```sh

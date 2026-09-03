@@ -8,14 +8,43 @@ import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
+// Authenticode signing (optional): set WINDOWS_CERT_FILE to a .pfx path and
+// WINDOWS_CERT_PASSWORD to its password to sign the app payload and the
+// Squirrel installer, so Windows Smart App Control / SmartScreen stop
+// blocking unsigned builds.
+const certFile = process.env.WINDOWS_CERT_FILE;
+const certPassword = process.env.WINDOWS_CERT_PASSWORD;
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     executableName: 'portyoshka',
+    win32metadata: {
+      CompanyName: 'Portyoshka',
+      FileDescription: 'Portyoshka',
+      ProductName: 'Portyoshka',
+      InternalName: 'Portyoshka',
+    },
+    ...(certFile
+      ? {
+          windowsSign: {
+            certificateFile: certFile,
+            ...(certPassword ? { certificatePassword: certPassword } : {}),
+            timestampServer: 'http://timestamp.digicert.com',
+          },
+        }
+      : {}),
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
+    new MakerSquirrel(
+      certFile
+        ? {
+            certificateFile: certFile,
+            ...(certPassword ? { certificatePassword: certPassword } : {}),
+          }
+        : {},
+    ),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
     new MakerDeb({}),
