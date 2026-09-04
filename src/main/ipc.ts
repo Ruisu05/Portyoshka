@@ -504,4 +504,30 @@ export function registerIpc(deps: IpcDeps): void {
     }
     return ok(result.filePaths[0]);
   });
+
+  ipcMain.handle('window:minimize', async (): Promise<IpcResult<null>> => {
+    deps.getWindow()?.minimize();
+    return ok(null);
+  });
+
+  ipcMain.handle('window:toggleMaximize', async (): Promise<IpcResult<null>> => {
+    const window = deps.getWindow();
+    if (window) {
+      if (window.isMaximized()) {
+        window.unmaximize();
+      } else {
+        window.maximize();
+      }
+    }
+    return ok(null);
+  });
+
+  ipcMain.handle('window:close', async (): Promise<IpcResult<null>> => {
+    deps.getWindow()?.close();
+    return ok(null);
+  });
+
+  ipcMain.handle('window:isMaximized', async (): Promise<IpcResult<boolean>> => {
+    return ok(deps.getWindow()?.isMaximized() ?? false);
+  });
 }

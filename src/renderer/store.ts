@@ -6,7 +6,6 @@ import type {
   InstallProgress,
   LibraryEntry,
   ModCatalog,
-  PortConfig,
   SelfUpdateInfo,
   SelfUpdateProgress,
   SettingsData,
@@ -26,10 +25,24 @@ export interface ToastItem {
   code?: string;
 }
 
+export type View = 'library' | 'mods' | 'downloads';
+
+export type LibraryFilter = 'all' | 'installed' | 'not-installed' | 'attention';
+
+export type LibrarySort = 'recent' | 'title' | 'version' | 'playtime';
+
+export interface DownloadRecord {
+  id: string;
+  portId: string;
+  name: string;
+  sizeBytes: number;
+  finishedAt: number;
+  ok: boolean;
+}
+
 interface AppState {
-  view: 'library' | 'catalog' | 'mods';
+  view: View;
   library: LibraryEntry[];
-  catalog: PortConfig[];
   installs: Record<string, InstallProgress>;
   busyInstalls: Record<string, boolean>;
   updateInfo: UpdateCheckResult[];
@@ -44,9 +57,17 @@ interface AppState {
   uninstallPrompt: string | null;
   updateDialogOpen: boolean;
   settingsDialogOpen: boolean;
+  libraryQuery: string;
+  libraryFilter: LibraryFilter;
+  librarySort: LibrarySort;
+  downloadsLog: DownloadRecord[];
   init(): Promise<void>;
   refresh(): Promise<void>;
-  setView(view: 'library' | 'catalog'): void;
+  setView(view: View): void;
+  setLibraryQuery(query: string): void;
+  setLibraryFilter(filter: LibraryFilter): void;
+  setLibrarySort(sort: LibrarySort): void;
+  clearDownloadsLog(): void;
   checkUpdates(force: boolean): Promise<void>;
   installUpdate(): Promise<void>;
   install(portId: string): Promise<void>;
@@ -89,7 +110,6 @@ interface AppState {
 export const useStore = create<AppState>()((set, get) => ({
   view: 'library',
   library: [],
-  catalog: [],
   installs: {},
   busyInstalls: {},
   updateInfo: [],
@@ -105,6 +125,10 @@ export const useStore = create<AppState>()((set, get) => ({
   updateDialogOpen: false,
   settingsDialogOpen: false,
   visibleLogs: {},
+  libraryQuery: '',
+  libraryFilter: 'all',
+  librarySort: 'recent',
+  downloadsLog: [],
 
   modsPortId: null,
   modsCatalog: {},
@@ -117,10 +141,21 @@ export const useStore = create<AppState>()((set, get) => ({
         set((state) => {
           const installs = { ...state.installs, [event.progress.portId]: event.progress };
           const busyInstalls = { ...state.busyInstalls };
+          let downloadsLog = state.downloadsLog;
           if (event.progress.stage === 'done' || event.progress.stage === 'cancelled') {
             delete busyInstalls[event.progress.portId];
+            const entry = get().library.find((l) => l.port.id === event.progress.portId);
+            const record: DownloadRecord = {
+              id: `${event.progress.portId}-${Date.now()}`,
+              portId: event.progress.portId,
+              name: entry?.port.displayName ?? event.progress.portId,
+              sizeBytes: event.progress.totalBytes,
+              finishedAt: Date.now(),
+              ok: event.progress.stage === 'done',
+            };
+            downloadsLog = [record, ...state.downloadsLog.filter((d) => d.portId !== event.progress.portId)].slice(0, 50);
           }
-          return { installs, busyInstalls };
+          return { installs, busyInstalls, downloadsLog };
         });
         if (event.progress.stage === 'done' || event.progress.stage === 'cancelled') {
           void get().refresh();
@@ -165,14 +200,12 @@ export const useStore = create<AppState>()((set, get) => ({
       }
     });
 
-    const [library, catalog, settings, updates] = await Promise.all([
+    const [library, settings, updates] = await Promise.all([
       api.getLibrary(),
-      api.getCatalog(),
       api.getSettings(),
       api.checkForUpdates(false),
     ]);
     if (library.ok) set({ library: library.data });
-    if (catalog.ok) set({ catalog: catalog.data });
     if (settings.ok) set({ settings: settings.data });
     if (updates.ok) {
       set({ updateInfo: updates.data.ports, selfUpdate: updates.data.self });
@@ -182,7 +215,7 @@ export const useStore = create<AppState>()((set, get) => ({
         set({ updateDialogOpen: true });
       }
     }
-    for (const result of [library, catalog, settings, updates]) {
+    for (const result of [library, settings, updates]) {
       if (!result.ok) get().pushError(result.error);
     }
 
@@ -195,19 +228,32 @@ export const useStore = create<AppState>()((set, get) => ({
   },
 
   async refresh() {
-    const [library, catalog] = await Promise.all([api.getLibrary(), api.getCatalog()]);
-    if (library.ok) set({ library: library.data });
-    if (catalog.ok) set({ catalog: catalog.data });
-    for (const result of [library, catalog]) {
-      if (!result.ok) get().pushError(result.error);
+    const result = await api.getLibrary();
+    if (result.ok) {
+      set({ library: result.data });
+    } else {
+      get().pushError(result.error);
     }
   },
 
   setView(view) {
     set({ view });
-    if (view === 'catalog') {
-      void get().refresh();
-    }
+  },
+
+  setLibraryQuery(query) {
+    set({ libraryQuery: query });
+  },
+
+  setLibraryFilter(filter) {
+    set({ libraryFilter: filter });
+  },
+
+  setLibrarySort(sort) {
+    set({ librarySort: sort });
+  },
+
+  clearDownloadsLog() {
+    set({ downloadsLog: [] });
   },
 
   async checkUpdates(force) {

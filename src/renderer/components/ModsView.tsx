@@ -47,8 +47,8 @@ export function ModsView() {
         <div className="empty-state">
           <div className="empty-title">No mods here yet</div>
           <div className="empty-text">No installed port supports mods. Install a port like Gen1Recomp first.</div>
-          <button className="btn btn-accent btn-lg" onClick={() => setView('catalog')}>
-            Add a port
+          <button className="btn btn-accent btn-lg" onClick={() => setView('library')}>
+            Browse library
           </button>
         </div>
       </div>

@@ -39,6 +39,17 @@ const api: PortyoshkaApi = {
   setSettings: (patch) => invoke<SettingsData>('settings:set', patch),
   setPortDirOverride: (portId, dir) => invoke<SettingsData>('settings:setPortDirOverride', portId, dir),
   pickDirectory: () => invoke<string | null>('dialog:pickDirectory'),
+  minimizeWindow: () => invoke<null>('window:minimize'),
+  toggleMaximizeWindow: () => invoke<null>('window:toggleMaximize'),
+  closeWindow: () => invoke<null>('window:close'),
+  getWindowMaximized: () => invoke<boolean>('window:isMaximized'),
+  onWindowStateChange(cb) {
+    const listener = (_event: unknown, maximized: boolean) => cb(maximized);
+    ipcRenderer.on('portyoshka:windowState', listener);
+    return () => {
+      ipcRenderer.removeListener('portyoshka:windowState', listener);
+    };
+  },
   onEvent(cb) {
     const listener = (_event: unknown, payload: MainEvent) => cb(payload);
     ipcRenderer.on('portyoshka:event', listener);

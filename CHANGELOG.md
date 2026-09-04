@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.2
+- Redesigned the whole UI: custom window titlebar with native window controls, new header with Library / Mods & Tools / Downloads tabs and a global library search (Ctrl+K)
+- The port catalog is gone — every port now lives in the library, with filters for All / Installed / Not Installed / Needs Attention, sorting and grid/list layouts
+- New Downloads page tracking active installs with progress and a completed-downloads history
+- ROM-unverified ports (Gen1Recomp) no longer count as "needs attention"
+
 ## 1.3.1
 - Windows: optional Authenticode signing for the app and installer so Smart App Control / SmartScreen stops blocking it (set WINDOWS_CERT_PFX / WINDOWS_CERT_PASSWORD secrets, or WINDOWS_CERT_FILE / WINDOWS_CERT_PASSWORD locally)
 

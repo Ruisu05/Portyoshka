@@ -20,11 +20,19 @@ const createWindow = () => {
     height: 720,
     minWidth: 800,
     minHeight: 560,
-    backgroundColor: '#0f1318',
+    frame: false,
+    backgroundColor: '#090d16',
     title: 'Portyoshka',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
+  });
+
+  mainWindow.on('maximize', () => {
+    mainWindow?.webContents.send('portyoshka:windowState', true);
+  });
+  mainWindow.on('unmaximize', () => {
+    mainWindow?.webContents.send('portyoshka:windowState', false);
   });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {

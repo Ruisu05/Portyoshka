@@ -250,5 +250,10 @@ export interface PortyoshkaApi {
   setSettings(patch: Partial<Pick<SettingsData, 'rootInstallDir' | 'githubToken'>>): Promise<IpcResult<SettingsData>>;
   setPortDirOverride(portId: string, dir: string | null): Promise<IpcResult<SettingsData>>;
   pickDirectory(): Promise<IpcResult<string | null>>;
+  minimizeWindow(): Promise<IpcResult<null>>;
+  toggleMaximizeWindow(): Promise<IpcResult<null>>;
+  closeWindow(): Promise<IpcResult<null>>;
+  getWindowMaximized(): Promise<IpcResult<boolean>>;
+  onWindowStateChange(cb: (maximized: boolean) => void): () => void;
   onEvent(cb: (event: MainEvent) => void): () => void;
 }
