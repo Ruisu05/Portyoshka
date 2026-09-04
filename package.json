@@ -1,7 +1,7 @@
 {
   "name": "portyoshka",
   "productName": "Portyoshka",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Launcher for fan-made native PC ports of console games",
   "main": ".vite/build/main.js",
   "private": true,

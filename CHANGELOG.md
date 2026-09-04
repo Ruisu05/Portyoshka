@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.3
+- Search box placeholder now just says "Search" (it filters the whole library, not only installed ports)
+
 ## 1.3.2
 - Redesigned the whole UI: custom window titlebar with native window controls, new header with Library / Mods & Tools / Downloads tabs and a global library search (Ctrl+K)
 - The port catalog is gone — every port now lives in the library, with filters for All / Installed / Not Installed / Needs Attention, sorting and grid/list layouts

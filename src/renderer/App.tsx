@@ -146,7 +146,7 @@ export function App() {
             ref={searchRef}
             className="search-input"
             type="text"
-            placeholder="Filter installed ports..."
+            placeholder="Search"
             value={libraryQuery}
             onChange={(e) => setLibraryQuery(e.target.value)}
             onFocus={() => {
