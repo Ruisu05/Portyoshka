@@ -1,6 +1,6 @@
 export type Platform = 'windows' | 'macos' | 'linux';
 
-export type RomHandling = 'native-wizard' | 'copy-to-working-dir' | 'cli-arg';
+export type RomHandling = 'native-wizard' | 'copy-to-working-dir' | 'copy-to-exe-dir' | 'cli-arg';
 
 export interface RomSpec {
   required: boolean;
@@ -66,6 +66,7 @@ export interface PortConfig {
   id: string;
   displayName: string;
   repo: string;
+  repoHost?: 'github' | 'gitlab';
   description?: string;
   icon?: string;
   assetPattern: Partial<Record<Platform, string>>;

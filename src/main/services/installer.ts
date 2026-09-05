@@ -4,7 +4,7 @@ import { minimatch } from 'minimatch';
 import { AppError } from './errors';
 import { getLatestRelease } from './github';
 import { downloadToFile } from './downloader';
-import { extractArchive, detectArchiveKind } from './extractor';
+import { extractZip, extractTarGz, detectArchiveKind, detectArchiveKindByContent } from './extractor';
 import { collectUserFiles } from './userFiles';
 import { getPort } from '../registry';
 import type { AppPaths } from '../paths';
@@ -128,6 +128,30 @@ function restoreBackup(backupDir: string, stagingDir: string): void {
   walk(backupDir);
 }
 
+export async function unpackNestedArchives(dir: string): Promise<void> {
+  for (;;) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const files = entries.filter((e) => e.isFile());
+    if (entries.length !== 1 || files.length !== 1) {
+      return;
+    }
+    const inner = path.join(dir, files[0].name);
+    let kind = detectArchiveKind(files[0].name);
+    if (kind === 'unsupported') {
+      kind = detectArchiveKindByContent(inner);
+    }
+    if (kind === 'unsupported') {
+      return;
+    }
+    if (kind === 'zip') {
+      await extractZip(inner, dir);
+    } else {
+      await extractTarGz(inner, dir);
+    }
+    fs.rmSync(inner, { force: true });
+  }
+}
+
 async function installPortInternal(deps: InstallDeps, portId: string, signal?: AbortSignal): Promise<InstalledPort> {
   const port = getPort(portId);
   if (!port) {
@@ -136,10 +160,9 @@ async function installPortInternal(deps: InstallDeps, portId: string, signal?: A
   const platform = deps.platform;
 
   deps.emit({ portId, stage: 'checking-release', percent: 0, downloadedBytes: 0, totalBytes: 0 });
-  const release = await getLatestRelease(port.repo, deps.getGithubToken() ?? undefined);
+  const release = await getLatestRelease(port.repo, deps.getGithubToken() ?? undefined, port.repoHost ?? 'github');
   const asset = pickAsset(release.assets, port.assetPattern[platform]);
-  const kind = detectArchiveKind(asset.name);
-  const isArchive = kind !== 'unsupported';
+  let kind = detectArchiveKind(asset.name);
 
   const installDir = resolveInstallDir(deps, portId);
   const archivePath = path.join(deps.paths.tmpDir, `${portId}-${release.tag}-${asset.name}`);
@@ -171,6 +194,11 @@ async function installPortInternal(deps: InstallDeps, portId: string, signal?: A
       },
     });
 
+    if (kind === 'unsupported') {
+      kind = detectArchiveKindByContent(archivePath);
+    }
+    const isArchive = kind !== 'unsupported';
+
     fs.rmSync(stagingDir, { recursive: true, force: true });
     fs.mkdirSync(stagingDir, { recursive: true });
 
@@ -182,7 +210,7 @@ async function installPortInternal(deps: InstallDeps, portId: string, signal?: A
         downloadedBytes: asset.size,
         totalBytes: asset.size,
       });
-      await extractArchive(archivePath, stagingDir, (processed, total) => {
+      const onExtract = (processed: number, total: number) => {
         deps.emit({
           portId,
           stage: 'extracting',
@@ -190,7 +218,13 @@ async function installPortInternal(deps: InstallDeps, portId: string, signal?: A
           downloadedBytes: processed,
           totalBytes: total,
         });
-      });
+      };
+      if (kind === 'zip') {
+        await extractZip(archivePath, stagingDir, onExtract);
+      } else {
+        await extractTarGz(archivePath, stagingDir, (processed) => onExtract(processed, 0));
+      }
+      await unpackNestedArchives(stagingDir);
     } else {
       fs.copyFileSync(archivePath, path.join(stagingDir, asset.name));
     }

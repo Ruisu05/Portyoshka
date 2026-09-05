@@ -160,6 +160,12 @@ export class LaunchManager {
           await this.ensureRomCopy(rom, target);
           break;
         }
+        case 'copy-to-exe-dir': {
+          const filename = port.rom.filename ?? rom.sha1 + rom.extension;
+          const target = path.join(exeDir, filename);
+          await this.ensureRomCopy(rom, target);
+          break;
+        }
         case 'cli-arg': {
           const template = port.rom.cliArg ?? '{rom}';
           args = template.split(/\s+/).map((piece) => piece.replace('{rom}', rom.cachedPath));

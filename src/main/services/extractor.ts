@@ -18,6 +18,30 @@ export function detectArchiveKind(fileName: string): ArchiveKind {
   return 'unsupported';
 }
 
+export function detectArchiveKindByContent(filePath: string): ArchiveKind {
+  let fd: number;
+  try {
+    fd = fs.openSync(filePath, 'r');
+  } catch {
+    return 'unsupported';
+  }
+  try {
+    const buf = Buffer.alloc(4);
+    fs.readSync(fd, buf, 0, 4, 0);
+    if (buf[0] === 0x50 && buf[1] === 0x4b) {
+      return 'zip';
+    }
+    if (buf[0] === 0x1f && buf[1] === 0x8b) {
+      return 'tar.gz';
+    }
+    return 'unsupported';
+  } catch {
+    return 'unsupported';
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
 function assertInside(destDir: string, entryPath: string): string {
   const resolved = path.resolve(destDir, entryPath);
   const root = path.resolve(destDir) + path.sep;
@@ -50,6 +74,7 @@ export async function extractZip(
 
   const total = zipfile.entryCount;
   let processed = 0;
+  const pendingSymlinks: Array<{ destPath: string; target: string }> = [];
   fs.mkdirSync(destDir, { recursive: true });
 
   await new Promise<void>((resolve, reject) => {
@@ -73,8 +98,38 @@ export async function extractZip(
 
       const unixMode = entry.externalFileAttributes >>> 16;
       if (unixMode && (unixMode & 0o170000) === 0o120000) {
-        zipfile.close();
-        reject(new AppError('EXTRACT_FAILED', 'Archive contains a symbolic link and was rejected', entryPath));
+        zipfile.openReadStream(entry, (streamErr, readStream) => {
+          if (streamErr || !readStream) {
+            zipfile.close();
+            reject(
+              new AppError(
+                'EXTRACT_FAILED',
+                'Could not read a symlink entry from the downloaded zip.',
+                streamErr ? streamErr.message : undefined,
+              ),
+            );
+            return;
+          }
+          const chunks: Buffer[] = [];
+          readStream.on('data', (chunk: Buffer) => chunks.push(chunk));
+          readStream.on('error', (err: Error) => {
+            zipfile.close();
+            reject(new AppError('EXTRACT_FAILED', 'Extraction failed', err.message));
+          });
+          readStream.on('end', () => {
+            const target = path.resolve(path.dirname(destPath), Buffer.concat(chunks).toString('utf8').trim());
+            const root = path.resolve(destDir) + path.sep;
+            if (target !== path.resolve(destDir) && !target.startsWith(root)) {
+              zipfile.close();
+              reject(new AppError('EXTRACT_FAILED', 'Archive contains a symbolic link escaping its destination and was rejected', entryPath));
+              return;
+            }
+            pendingSymlinks.push({ destPath, target });
+            processed += 1;
+            onProgress?.(processed, total);
+            zipfile.readEntry();
+          });
+        });
         return;
       }
 
@@ -109,7 +164,25 @@ export async function extractZip(
           });
       });
     });
-    zipfile.on('end', () => resolve());
+    zipfile.on('end', () => {
+      try {
+        for (const { destPath, target } of pendingSymlinks) {
+          try {
+            fs.symlinkSync(target, destPath, 'file');
+          } catch (symErr) {
+            if ((symErr as NodeJS.ErrnoException).code === 'EEXIST') {
+              continue;
+            }
+            // Creating symlinks can be restricted (e.g. Windows without
+            // developer mode); duplicate the target file instead.
+            fs.copyFileSync(target, destPath);
+          }
+        }
+        resolve();
+      } catch (err) {
+        reject(new AppError('EXTRACT_FAILED', 'Could not create symlinks', (err as Error).message));
+      }
+    });
     zipfile.on('error', (err: Error) => reject(new AppError('EXTRACT_FAILED', 'Extraction failed', err.message)));
     zipfile.readEntry();
   });

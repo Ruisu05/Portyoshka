@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.4
+- Seventeen new ports: Banjo: Recompiled, Bomberman 64: Recompiled, Bomberman Hero: Recompiled, Dinosaur Planet: Recompiled, Donkey Kong 64: Recompiled, Perfect Dark, Dr. Mario 64 Recompiled+, Extreme-G: Recompiled, Goemon 64: Recompiled, Harvest Moon 64: Recompiled, Mega Man 64: Recompiled, Quest 64: Recompiled, Snowboard Kids 2: Recompiled, Space Station Silicon Valley: Recompiled, WCW vs. nWo World Tour: Recompiled, WCW/nWo Revenge: Recompiled and Zelda 64: Recompiled
+- GitLab release support (Extreme-G: Recompiled publishes on GitLab)
+- Installer now unpacks nested archives, detects archive type by content, and preserves symlinks inside macOS app bundles
+- Releases that only have prereleases now install the newest one instead of failing
+- Hidden the Output button for the recomp ports that print nothing to the console
+- Fixed the version pill showing a doubled "v" (e.g. "vv0.2.56") for tags that already start with v
+
 ## 1.3.3
 - Search box placeholder now just says "Search" (it filters the whole library, not only installed ports)
 

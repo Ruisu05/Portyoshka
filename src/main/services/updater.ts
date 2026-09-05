@@ -65,7 +65,11 @@ async function checkOne(
   if (cache && Date.now() - cache.at < CACHE_TTL_MS) {
     latestTag = cache.tag;
   } else {
-    const release = await getLatestRelease(port.repo, deps.getGithubToken() ?? undefined);
+    const release = await getLatestRelease(
+      port.repo,
+      deps.getGithubToken() ?? undefined,
+      port.repoHost ?? 'github',
+    );
     latestTag = release.tag;
     writeCache(deps, port.repo, release.tag);
   }

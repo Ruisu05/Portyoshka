@@ -25,6 +25,10 @@ function romMissing(entry: LibraryEntry): boolean {
   return entry.port.rom.required && !entry.romStatus.linked;
 }
 
+function displayVersion(version: string): string {
+  return `v${version.replace(/^v/, '')}`;
+}
+
 export function PlayIcon({ size = 12 }: { size?: number }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
@@ -276,7 +280,7 @@ export function PortCard({ entry }: { entry: LibraryEntry }) {
           </div>
           {entry.port.description && <div className="card-desc">{entry.port.description}</div>}
           <div className="card-meta">
-            {entry.installed && <span className="pill pill-version">v{entry.installed.version}</span>}
+            {entry.installed && <span className="pill pill-version">{displayVersion(entry.installed.version)}</span>}
             {entry.playtimeMs > 0 && (
               <span
                 className="pill"
@@ -350,7 +354,7 @@ export function PortRow({ entry }: { entry: LibraryEntry }) {
       </div>
       <StatusPill entry={entry} />
       <div className="port-row-meta">
-        {entry.installed && <span className="pill pill-version">v{entry.installed.version}</span>}
+        {entry.installed && <span className="pill pill-version">{displayVersion(entry.installed.version)}</span>}
         {entry.playtimeMs > 0 && (
           <span className="pill">
             <ClockIcon />

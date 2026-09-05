@@ -1,6 +1,6 @@
 # Portyoshka
 
-A desktop launcher for fan-made native PC ports of classic console games. Install, update, and launch ports straight from their official GitHub releases — no manual downloading, unzipping, or fiddling with AppImages.
+A desktop launcher for fan-made native PC ports of classic console games. Install, update, and launch ports straight from their official GitHub or GitLab releases — no manual downloading, unzipping, or fiddling with AppImages.
 
 Built with Electron, React, TypeScript, and Zustand.
 
@@ -14,7 +14,7 @@ Built with Electron, React, TypeScript, and Zustand.
 
 - **One-click install** — picks the right release asset for your OS and platform, downloads it, verifies it, and extracts it; multiple installs queue up one at a time
 - **ROM handling** — guides you through providing a legally obtained ROM for each game and validates its hash where the port publishes one
-- **Updates** — checks the port's GitHub releases and updates in place, preserving your saves and extracted game data
+- **Updates** — checks the port's GitHub or GitLab releases and updates in place, preserving your saves and extracted game data
 - **Self-updater** — Portyoshka checks its own GitHub releases on launch (and via the "Check for updates" button) and can update itself: AppImage downloads and replaces itself, Windows launches the new installer
 - **Playtime tracking** — records play time per port and shows when you last played
 - **Mods** — browse a mod directory with search and categories, install, update and remove mods, and jump to the mod's page (GameBanana for the HarbourMasters ports, the community index for Gen1Recomp)
@@ -34,6 +34,23 @@ Built with Electron, React, TypeScript, and Zustand.
 | [Lighthouse](https://github.com/HarbourMasters/Lighthouse) | Banjo-Kazooie | US 1.0 / 1.1, JP, or PAL B-K ROM |
 | [Dusklight](https://github.com/TwilitRealm/dusklight) | The Legend of Zelda: Twilight Princess | GameCube ISO (accepted by extension, not hash-verified) |
 | [Gen1Recomp](https://github.com/bryanthaboi/gen1recomp) | Pokémon Red, Blue & Yellow | None — the game imports your US Red/Blue/Yellow (or Gold/Silver/Crystal) ROM itself through its own launcher |
+| [Banjo: Recompiled](https://github.com/BanjoRecomp/BanjoRecomp) | Banjo-Kazooie | None — the game asks for the US 1.0 ROM in its own menu |
+| [Bomberman 64: Recompiled](https://github.com/RevoSucks/BM64Recomp) | Bomberman 64 | None — the game asks for the US ROM in its own menu |
+| [Bomberman Hero: Recompiled](https://github.com/RevoSucks/BMHeroRecomp) | Bomberman Hero | None — the game asks for the US ROM in its own menu |
+| [Dinosaur Planet: Recompiled](https://github.com/DinosaurPlanetRecomp/dino-recomp) | Dinosaur Planet (prototype) | None — the game asks for the prototype ROM in its own menu |
+| [Donkey Kong 64: Recompiled](https://github.com/Rainchus/Donkey-Kong-64-Recompiled) | Donkey Kong 64 | None — the game asks for the US ROM in its own menu |
+| [Perfect Dark](https://github.com/perfect-dark-pc-port/perfect_dark) | Perfect Dark | NTSC US ROM (md5 verified), copied next to the game as `data/pd.ntsc-final.z64` |
+| [Dr. Mario 64 Recompiled+](https://github.com/theboy181/drmario64_recomp_plus) | Dr. Mario 64 | None — the game asks for the US ROM itself at runtime |
+| [Extreme-G: Recompiled](https://gitlab.com/sonicdcer/ExtremeGRecomp) | Extreme-G | None — the game asks for the US 1.0 ROM in its own menu |
+| [Goemon 64: Recompiled](https://github.com/klorfmorf/Goemon64Recomp) | Mystical Ninja Starring Goemon | None — the game asks for the US ROM in its own menu |
+| [Harvest Moon 64: Recompiled](https://github.com/HarvestMoon64Recomp/HarvestMoon64Recomp) | Harvest Moon 64 | None — the game asks for the US ROM in its own menu |
+| [Mega Man 64: Recompiled](https://github.com/MegaMan64Recomp/MegaMan64Recompiled) | Mega Man 64 | None — the game asks for the US ROM in its own menu |
+| [Quest 64: Recompiled](https://github.com/Rainchus/Quest64-Recomp) | Quest 64 | None — the game asks for the US ROM in its own menu |
+| [Snowboard Kids 2: Recompiled](https://github.com/cdlewis/snowboardkids2-recomp) | Snowboard Kids 2 | None — the game asks for the US ROM in its own menu |
+| [Space Station Silicon Valley: Recompiled](https://github.com/Cellenseres/SSSV_Recomp) | Space Station Silicon Valley | None — the game asks for the US 1.0 ROM in its own menu |
+| [WCW vs. nWo World Tour: Recompiled](https://github.com/jessetbh/WCWvsNWOWorldTourRecomp) | WCW vs. nWo World Tour | None — the game asks for the US ROM itself |
+| [WCW/nWo Revenge: Recompiled](https://github.com/jessetbh/WCWnWoRevengeRecomp) | WCW/nWo Revenge | None — the game asks for the US ROM itself |
+| [Zelda 64: Recompiled](https://github.com/Zelda64Recomp/Zelda64Recomp) | The Legend of Zelda: Majora's Mask | None — the game asks for the US ROM in its own menu |
 
 Ports are listed on the platform where they publish builds — e.g. some ports have no macOS release, so they won't appear on macOS.
 
@@ -77,7 +94,7 @@ The short version:
 
 - IPC contract: `PortyoshkaApi` + `MainEvent` in `src/shared/types.ts` → handlers in `src/main/ipc.ts` → preload bridge in `src/preload.ts` → consumed via `window.portyoshka`.
 - Database: `node:sqlite` (WAL, foreign keys on), migrations are an append-only array.
-- Ports: `src/main/registry/ports/`, each a `PortConfig` pointing at a GitHub repo, its release asset glob, executable name, ROM spec, and `preserveOnUpdate` globs.
+- Ports: `src/main/registry/ports/`, each a `PortConfig` pointing at a GitHub or GitLab repo, its release asset glob, executable name, ROM spec, and `preserveOnUpdate` globs.
 
 ## Making a release
 
@@ -132,4 +149,4 @@ The workflow publishes releases automatically. If you do it by hand instead:
 
 ## Legal
 
-Portyoshka is an unofficial fan project. It is not affiliated with Nintendo, or with the port projects' authors — it merely downloads their releases from GitHub and helps you run them. Game ROMs are not distributed; you must provide your own legally obtained copies. This project is MIT licensed; see the port projects' licenses for their terms.
+Portyoshka is an unofficial fan project. It is not affiliated with Nintendo, or with the port projects' authors — it merely downloads their releases from GitHub/GitLab and helps you run them. Game ROMs are not distributed; you must provide your own legally obtained copies. This project is MIT licensed; see the port projects' licenses for their terms.

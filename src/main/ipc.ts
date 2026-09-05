@@ -309,7 +309,8 @@ export function registerIpc(deps: IpcDeps): void {
       if (!port) {
         return fail(new AppError('UNKNOWN', `Unknown port: ${portId}`));
       }
-      await shell.openExternal(`https://github.com/${port.repo}`);
+      const base = port.repoHost === 'gitlab' ? 'https://gitlab.com/' : 'https://github.com/';
+      await shell.openExternal(base + port.repo);
       return ok(null);
     } catch (err) {
       return fail(err);

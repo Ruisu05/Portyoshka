@@ -1,17 +1,45 @@
 import { AppError } from './errors';
-import type { ReleaseInfo } from '../../shared/types';
+import type { ReleaseInfo, ReleaseAsset } from '../../shared/types';
 
-const API_ROOT = 'https://api.github.com';
+const GITHUB_API_ROOT = 'https://api.github.com';
+const GITLAB_API_ROOT = 'https://gitlab.com/api/v4';
 const DEFAULT_TIMEOUT_MS = 30000;
 
-export async function getLatestRelease(repo: string, token?: string): Promise<ReleaseInfo> {
+interface GithubReleaseBody {
+  tag_name?: string;
+  name?: string;
+  published_at?: string;
+  assets?: Array<{
+    name?: string;
+    browser_download_url?: string;
+    size?: number;
+    digest?: string;
+    content_type?: string;
+  }>;
+}
+
+interface GitlabReleaseBody {
+  tag_name?: string;
+  name?: string;
+  released_at?: string;
+  assets?: {
+    links?: Array<{
+      name?: string;
+      url?: string;
+      direct_asset_url?: string;
+      link_type?: string;
+    }>;
+  };
+}
+
+async function fetchJson(url: string, token?: string): Promise<{ status: number; body: unknown }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
   let response: Response;
   try {
-    response = await fetch(`${API_ROOT}/repos/${repo}/releases/latest`, {
+    response = await fetch(url, {
       headers: {
-        Accept: 'application/vnd.github+json',
+        Accept: 'application/json',
         'User-Agent': 'portyoshka',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -20,41 +48,26 @@ export async function getLatestRelease(repo: string, token?: string): Promise<Re
   } catch (err) {
     const name = (err as Error).name;
     if (name === 'AbortError') {
-      throw new AppError('NETWORK_OFFLINE', `The request to GitHub timed out (${repo})`);
+      throw new AppError('NETWORK_OFFLINE', `The request to the release host timed out (${url})`);
     }
-    throw new AppError('NETWORK_OFFLINE', `Cannot reach GitHub. Check your network connection. (${repo})`);
+    throw new AppError('NETWORK_OFFLINE', `Cannot reach the release host. Check your network connection.`);
   } finally {
     clearTimeout(timeout);
   }
-
   if (response.status === 403 || response.status === 429) {
-    const reset = response.headers.get('x-ratelimit-reset');
-    const until = reset ? new Date(Number(reset) * 1000).toLocaleTimeString() : 'later';
     throw new AppError(
       'RATE_LIMITED',
-      `GitHub API rate limit reached. Unauthenticated requests are limited to 60/hour.`,
-      token ? undefined : `Try adding a personal access token in Settings, or wait until ${until}.`,
+      'The release API rate limit was reached.',
+      token ? undefined : 'Try adding a personal access token in Settings, or wait a while.',
     );
   }
-  if (response.status === 404) {
-    throw new AppError('NO_RELEASE', `No releases found for ${repo}`);
+  if (!response.ok && response.status !== 404) {
+    throw new AppError('API_ERROR', `Release API error (HTTP ${response.status}) for ${url}`);
   }
-  if (!response.ok) {
-    throw new AppError('API_ERROR', `GitHub API error (HTTP ${response.status}) for ${repo}`);
-  }
+  return { status: response.status, body: await response.json().catch(() => null) };
+}
 
-  const body = (await response.json()) as {
-    tag_name?: string;
-    name?: string;
-    published_at?: string;
-    assets?: Array<{
-      name?: string;
-      browser_download_url?: string;
-      size?: number;
-      digest?: string;
-      content_type?: string;
-    }>;
-  };
+function githubBodyToRelease(body: GithubReleaseBody, repo: string): ReleaseInfo {
   const tag = body.tag_name;
   if (!tag) {
     throw new AppError('API_ERROR', `Unexpected GitHub API response for ${repo}`);
@@ -73,4 +86,59 @@ export async function getLatestRelease(repo: string, token?: string): Promise<Re
         contentType: a.content_type,
       })),
   };
+}
+
+async function getLatestGithubRelease(repo: string, token?: string): Promise<ReleaseInfo> {
+  const { status, body } = await fetchJson(`${GITHUB_API_ROOT}/repos/${repo}/releases/latest`, token);
+  if (status !== 404) {
+    return githubBodyToRelease(body as GithubReleaseBody, repo);
+  }
+  // No stable release: fall back to the newest release of any kind (prereleases included).
+  const list = await fetchJson(`${GITHUB_API_ROOT}/repos/${repo}/releases?per_page=5`, token);
+  const releases = Array.isArray(list.body) ? (list.body as GithubReleaseBody[]) : [];
+  const newest = releases[0];
+  if (!newest) {
+    throw new AppError('NO_RELEASE', `No releases found for ${repo}`);
+  }
+  return githubBodyToRelease(newest, repo);
+}
+
+async function getLatestGitlabRelease(repo: string): Promise<ReleaseInfo> {
+  const encoded = encodeURIComponent(repo);
+  const { status, body } = await fetchJson(
+    `${GITLAB_API_ROOT}/projects/${encoded}/releases/permalink/latest`,
+  );
+  if (status === 404) {
+    throw new AppError('NO_RELEASE', `No releases found for ${repo}`);
+  }
+  const release = body as GitlabReleaseBody;
+  const tag = release.tag_name;
+  if (!tag) {
+    throw new AppError('API_ERROR', `Unexpected GitLab API response for ${repo}`);
+  }
+  const assets: ReleaseAsset[] = [];
+  for (const link of release.assets?.links ?? []) {
+    const url = link.direct_asset_url ?? link.url;
+    if (link.link_type !== 'package' || !link.name || !url) {
+      continue;
+    }
+    assets.push({ name: link.name, browserDownloadUrl: url, size: 0 });
+  }
+  return {
+    tag,
+    name: release.name ?? tag,
+    publishedAt: release.released_at ?? '',
+    assets,
+  };
+}
+
+export async function getLatestRelease(
+  repo: string,
+  token?: string,
+  host: 'github' | 'gitlab' = 'github',
+): Promise<ReleaseInfo> {
+  if (host === 'gitlab') {
+    return getLatestGitlabRelease(repo);
+  }
+  return getLatestGithubRelease(repo, token);
 }

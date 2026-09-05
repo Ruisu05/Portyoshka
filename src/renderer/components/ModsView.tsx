@@ -226,7 +226,7 @@ function ModCard({
         {mod.summary && <div className="card-desc mod-summary">{mod.summary}</div>}
       </div>
       <div className="card-actions">
-        {installed && <span className="mod-row-installed">v{mod.installedVersion}</span>}
+        {installed && <span className="mod-row-installed">v{(mod.installedVersion ?? '').replace(/^v/, '')}</span>}
         <div className="mod-card-spacer" />
         {pageUrl && (
           <button
