@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.5
+- Added The Legend of Zelda: A Link to the Past Recompiled
+- Added Snap64 Recomp (Pokemon Snap)
+- Added repository buttons for ports before installation
+- Preserved user files when updating ports whose executable moves between versioned archive folders
+
 ## 1.3.4
 - Seventeen new ports: Banjo: Recompiled, Bomberman 64: Recompiled, Bomberman Hero: Recompiled, Dinosaur Planet: Recompiled, Donkey Kong 64: Recompiled, Perfect Dark, Dr. Mario 64 Recompiled+, Extreme-G: Recompiled, Goemon 64: Recompiled, Harvest Moon 64: Recompiled, Mega Man 64: Recompiled, Quest 64: Recompiled, Snowboard Kids 2: Recompiled, Space Station Silicon Valley: Recompiled, WCW vs. nWo World Tour: Recompiled, WCW/nWo Revenge: Recompiled and Zelda 64: Recompiled
 - GitLab release support (Extreme-G: Recompiled publishes on GitLab)

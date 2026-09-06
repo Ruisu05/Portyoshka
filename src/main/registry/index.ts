@@ -24,6 +24,8 @@ import { sssvRecomp } from './ports/sssvrecomp';
 import { wcwRecomp } from './ports/wcwrecomp';
 import { revengeRecomp } from './ports/revengerecomp';
 import { zelda64Recomp } from './ports/zelda64recomp';
+import { zeldaAlttpRecomp } from './ports/zeldaalttprecomp';
+import { snap64Recomp } from './ports/snap64recomp';
 
 export const REGISTRY_PORTS: PortConfig[] = [
   shipwright,
@@ -51,6 +53,8 @@ export const REGISTRY_PORTS: PortConfig[] = [
   wcwRecomp,
   revengeRecomp,
   zelda64Recomp,
+  zeldaAlttpRecomp,
+  snap64Recomp,
 ];
 
 export function getPort(id: string): PortConfig | undefined {

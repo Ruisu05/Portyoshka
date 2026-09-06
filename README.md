@@ -17,6 +17,7 @@ Built with Electron, React, TypeScript, and Zustand.
 - **Updates** — checks the port's GitHub or GitLab releases and updates in place, preserving your saves and extracted game data
 - **Self-updater** — Portyoshka checks its own GitHub releases on launch (and via the "Check for updates" button) and can update itself: AppImage downloads and replaces itself, Windows launches the new installer
 - **Playtime tracking** — records play time per port and shows when you last played
+- **Repository links** — open any port's GitHub or GitLab repository directly from the library, even before installing it
 - **Mods** — browse a mod directory with search and categories, install, update and remove mods, and jump to the mod's page (GameBanana for the HarbourMasters ports, the community index for Gen1Recomp)
 - **Add to Steam** — one click adds a port to your Steam library with its icon, toggles to remove
 - **Clean launches** — launches, monitors, and kills the port's processes properly (handles AppImage FUSE quirks and child processes)
@@ -51,6 +52,8 @@ Built with Electron, React, TypeScript, and Zustand.
 | [WCW vs. nWo World Tour: Recompiled](https://github.com/jessetbh/WCWvsNWOWorldTourRecomp) | WCW vs. nWo World Tour | None — the game asks for the US ROM itself |
 | [WCW/nWo Revenge: Recompiled](https://github.com/jessetbh/WCWnWoRevengeRecomp) | WCW/nWo Revenge | None — the game asks for the US ROM itself |
 | [Zelda 64: Recompiled](https://github.com/Zelda64Recomp/Zelda64Recomp) | The Legend of Zelda: Majora's Mask | None — the game asks for the US ROM in its own menu |
+| [A Link to the Past Recompiled](https://github.com/mstan/ZeldaAlttPSNESRecomp) | The Legend of Zelda: A Link to the Past | None — the game asks for the US `.sfc` or `.smc` ROM in its own launcher |
+| [Snap64 Recomp](https://github.com/JackandBeans/Snap64Recomp) | Pokemon Snap | US ROM (`pokemonsnap.z64`, SHA-1 verified) |
 
 Ports are listed on the platform where they publish builds — e.g. some ports have no macOS release, so they won't appear on macOS.
 

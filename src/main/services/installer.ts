@@ -83,13 +83,28 @@ function resolveExecutable(deps: InstallDeps, installDir: string, executableSpec
   return candidate;
 }
 
-function preserveUserFiles(oldDir: string, stagingDir: string, patterns: string[]): void {
+function isPathInside(parent: string, candidate: string): boolean {
+  const relative = path.relative(parent, candidate);
+  return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
+}
+
+function preserveUserFiles(
+  oldDir: string,
+  stagingDir: string,
+  patterns: string[],
+  oldBaseDir?: string,
+  newBaseDir?: string,
+): void {
   if (!fs.existsSync(oldDir)) {
     return;
   }
   for (const rel of collectUserFiles(oldDir, patterns)) {
     const source = path.join(oldDir, rel);
-    const target = path.join(stagingDir, rel);
+    const relativeToBase =
+      oldBaseDir && newBaseDir && isPathInside(oldBaseDir, source) ? path.relative(oldBaseDir, source) : null;
+    const target = relativeToBase === null
+      ? path.join(stagingDir, rel)
+      : path.join(newBaseDir!, relativeToBase);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.copyFileSync(source, target);
   }
@@ -158,6 +173,10 @@ async function installPortInternal(deps: InstallDeps, portId: string, signal?: A
     throw new AppError('UNKNOWN', `Unknown port: ${portId}`);
   }
   const platform = deps.platform;
+  const executableSpec = port.executable[platform];
+  if (!executableSpec) {
+    throw new AppError('NO_ASSET', 'This port has no configured executable for your OS.');
+  }
 
   deps.emit({ portId, stage: 'checking-release', percent: 0, downloadedBytes: 0, totalBytes: 0 });
   const release = await getLatestRelease(port.repo, deps.getGithubToken() ?? undefined, port.repoHost ?? 'github');
@@ -230,7 +249,14 @@ async function installPortInternal(deps: InstallDeps, portId: string, signal?: A
     }
 
     deps.emit({ portId, stage: 'finalizing', percent: 99, downloadedBytes: 0, totalBytes: 0 });
-    preserveUserFiles(installDir, stagingDir, port.preserveOnUpdate);
+    const preserveFromDir =
+      port.preserveOnUpdateRelativeToExecutable && fs.existsSync(installDir)
+        ? path.dirname(resolveExecutable(deps, installDir, executableSpec))
+        : undefined;
+    const preserveIntoDir = port.preserveOnUpdateRelativeToExecutable
+      ? path.dirname(resolveExecutable(deps, stagingDir, executableSpec))
+      : undefined;
+    preserveUserFiles(installDir, stagingDir, port.preserveOnUpdate, preserveFromDir, preserveIntoDir);
     const restoreFrom = fs.existsSync(installDir) ? null : latestBackupDir(deps.paths.dataDir, port.id);
     if (restoreFrom) {
       restoreBackup(restoreFrom, stagingDir);
@@ -250,10 +276,6 @@ async function installPortInternal(deps: InstallDeps, portId: string, signal?: A
     }
     fs.rmSync(backupDir, { recursive: true, force: true });
 
-    const executableSpec = port.executable[platform];
-    if (!executableSpec) {
-      throw new AppError('NO_ASSET', 'This port has no configured executable for your OS.');
-    }
     const executablePath = resolveExecutable(deps, installDir, executableSpec);
     if (platform !== 'windows') {
       fs.chmodSync(executablePath, 0o755);

@@ -219,15 +219,19 @@ export function PortIconActions({ entry }: { entry: LibraryEntry }) {
   const addToSteam = useStore((s) => s.addToSteam);
   const openUninstallPrompt = useStore((s) => s.openUninstallPrompt);
 
-  if (!entry.installed) return null;
+  const repoButton = (
+    <button className="icon-btn" title="GitHub repository" onClick={() => void openRepo(entry.port.id)}>
+      <GitHubIcon />
+    </button>
+  );
+
+  if (!entry.installed) return repoButton;
 
   return (
     <>
+      {repoButton}
       <button className="icon-btn" title="Open game directory" onClick={() => void showFolder(entry.port.id)}>
         <FolderIcon />
-      </button>
-      <button className="icon-btn" title="GitHub repository" onClick={() => void openRepo(entry.port.id)}>
-        <GitHubIcon />
       </button>
       <button
         className="icon-btn"

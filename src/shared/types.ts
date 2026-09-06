@@ -73,6 +73,7 @@ export interface PortConfig {
   executable: Partial<Record<Platform, string>>;
   rom: RomSpec;
   preserveOnUpdate: string[];
+  preserveOnUpdateRelativeToExecutable?: boolean;
   notes?: string;
   noOutput?: boolean;
   mods?: PortModsConfig;
