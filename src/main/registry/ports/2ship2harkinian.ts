@@ -7,8 +7,8 @@ export const twoShipTwoHarkinian: PortConfig = {
   description: 'A PC port of Majora\u2019s Mask',
   icon: 'assets/icons/2ship2harkinian.png',
   assetPattern: {
-    windows: '2Ship-*Win64*.zip',
-    macos: '2Ship-*Mac*.zip',
+    windows: '*Win64*.zip',
+    macos: '*Mac*.zip',
     linux: '*Linux*.zip',
   },
   executable: {

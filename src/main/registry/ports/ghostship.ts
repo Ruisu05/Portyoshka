@@ -7,9 +7,9 @@ export const ghostship: PortConfig = {
   description: 'A PC port of Super Mario 64',
   icon: 'assets/icons/ghostship.png',
   assetPattern: {
-    windows: 'Mary-Celeste-*Win64*.zip',
-    macos: 'Mary-Celeste-*Mac*.zip',
-    linux: 'Mary-Celeste-*Linux*.zip',
+    windows: '*Win64*.zip',
+    macos: '*Mac*.zip',
+    linux: '*Linux*.zip',
   },
   executable: {
     windows: 'ghostship.exe',

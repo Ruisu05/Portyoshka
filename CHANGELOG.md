@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.6
+- Relaxed HarbourMasters asset matching to follow platform names instead of release-specific build prefixes
+
 ## 1.3.5
 - Added The Legend of Zelda: A Link to the Past Recompiled
 - Added Snap64 Recomp (Pokemon Snap)

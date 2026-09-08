@@ -7,9 +7,9 @@ export const spaghettiKart: PortConfig = {
   description: 'A PC port of Mario Kart 64',
   icon: 'assets/icons/spaghetti-kart.png',
   assetPattern: {
-    windows: 'spaghetti-windows.zip',
-    macos: 'spaghetti-mac-*.zip',
-    linux: 'spaghetti-linux.zip',
+    windows: '*Windows*.zip',
+    macos: '*Mac*.zip',
+    linux: '*Linux*.zip',
   },
   executable: {
     windows: 'Spaghettify.exe',

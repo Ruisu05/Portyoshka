@@ -7,8 +7,8 @@ export const starship: PortConfig = {
   description: 'A PC port of Star Fox 64',
   icon: 'assets/icons/starship.png',
   assetPattern: {
-    windows: 'Starship-*Windows*.zip',
-    linux: 'Starship-*Linux*.zip',
+    windows: '*Windows*.zip',
+    linux: '*Linux*.zip',
   },
   executable: {
     windows: 'starship.exe',

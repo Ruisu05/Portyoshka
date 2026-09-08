@@ -7,9 +7,9 @@ export const lighthouse: PortConfig = {
   description: 'A PC port of Banjo-Kazooie',
   icon: 'assets/icons/lighthouse.png',
   assetPattern: {
-    windows: 'Lighthouse-*Win64*.zip',
-    macos: 'Lighthouse-*Mac*.zip',
-    linux: 'Lighthouse-*Linux*.zip',
+    windows: '*Win64*.zip',
+    macos: '*Mac*.zip',
+    linux: '*Linux*.zip',
   },
   executable: {
     windows: 'lighthouse.exe',
