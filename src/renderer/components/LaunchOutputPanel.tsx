@@ -19,7 +19,7 @@ export function LaunchOutputPanel({ entry }: { entry: LibraryEntry }) {
     <div className="log-panel">
       <div className="log-header">
         <span>Game output</span>
-        <button className="btn btn-ghost log-export-btn" onClick={() => void exportLog(entry.port.id)}>
+        <button className="btn btn-quiet log-export-btn" onClick={() => void exportLog(entry.port.id)}>
           Export log
         </button>
       </div>

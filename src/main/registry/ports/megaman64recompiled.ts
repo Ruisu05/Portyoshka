@@ -5,6 +5,7 @@ export const megaMan64Recompiled: PortConfig = {
   displayName: 'Mega Man 64: Recompiled',
   repo: 'MegaMan64Recomp/MegaMan64Recompiled',
   description: 'A PC port of Mega Man 64',
+  icon: 'assets/icons/megaman64recompiled.png',
   assetPattern: {
     windows: 'MegaMan64Recompiled-*-Windows.zip',
     macos: 'MegaMan64Recompiled-*-macOS.zip',

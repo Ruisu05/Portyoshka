@@ -5,6 +5,7 @@ export const goemon64Recomp: PortConfig = {
   displayName: 'Goemon 64: Recompiled',
   repo: 'klorfmorf/Goemon64Recomp',
   description: 'A PC port of Mystical Ninja Starring Goemon',
+  icon: 'assets/icons/goemon64recomp.png',
   assetPattern: {
     windows: 'Goemon64Recompiled-Windows-*.zip',
     macos: 'Goemon64Recompiled-macOS-*.zip',

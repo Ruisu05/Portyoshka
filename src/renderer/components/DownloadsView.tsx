@@ -44,10 +44,10 @@ export function DownloadsView() {
 
       <div className="downloads-section">
         <div className="downloads-section-title">
-          Active <span className="pill pill-version">{activeIds.length}</span>
+          Active {activeIds.length > 0 && <span className="section-count">{activeIds.length}</span>}
         </div>
         {activeIds.length === 0 ? (
-          <div className="mods-empty">No active downloads.</div>
+          <div className="mods-empty">Nothing is downloading right now.</div>
         ) : (
           activeIds.map((portId) => {
             const progress = installs[portId];
@@ -88,17 +88,17 @@ export function DownloadsView() {
         <div className="downloads-section-title-row">
           <div className="downloads-section-title">Completed</div>
           {downloadsLog.length > 0 && (
-            <button className="btn btn-ghost btn-sm" onClick={clearDownloadsLog}>
+            <button className="btn btn-quiet btn-sm" onClick={clearDownloadsLog}>
               Clear history
             </button>
           )}
         </div>
         {downloadsLog.length === 0 ? (
-          <div className="mods-empty">Nothing downloaded yet this session.</div>
+          <div className="mods-empty">Finished installs appear here for this session.</div>
         ) : (
           downloadsLog.map((record) => (
-            <div key={record.id} className="download-item download-item-done">
-              <div className={`download-item-icon ${record.ok ? 'download-done' : 'download-cancelled'}`}>
+            <div key={record.id} className="download-item">
+              <div className={`download-item-icon ${record.ok ? 'is-done' : 'is-cancelled'}`}>
                 {record.ok ? (
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
@@ -112,7 +112,7 @@ export function DownloadsView() {
               <div className="download-item-main">
                 <div className="download-item-name">
                   {record.name}
-                  <span className={`badge ${record.ok ? '' : 'badge-warn'}`}>
+                  <span className={`badge ${record.ok ? '' : 'is-warn'}`}>
                     {record.ok ? 'Installed' : 'Cancelled'}
                   </span>
                 </div>
@@ -120,7 +120,7 @@ export function DownloadsView() {
                   {formatBytes(record.sizeBytes)} · {new Date(record.finishedAt).toLocaleString()}
                 </div>
               </div>
-              <button className="btn btn-ghost btn-sm" onClick={() => setView('library')}>
+              <button className="btn btn-quiet btn-sm" onClick={() => setView('library')}>
                 View in library
               </button>
             </div>

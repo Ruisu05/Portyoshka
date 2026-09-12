@@ -5,6 +5,7 @@ export const quest64Recomp: PortConfig = {
   displayName: 'Quest 64: Recompiled',
   repo: 'Rainchus/Quest64-Recomp',
   description: 'A PC port of Quest 64',
+  icon: 'assets/icons/quest64recomp.png',
   assetPattern: {
     windows: 'Quest64Recompiled*.zip',
   },

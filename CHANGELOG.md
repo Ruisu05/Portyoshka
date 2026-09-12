@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.7
+- Redesigned the UI: graphite surfaces, M PLUS 1 typography, a single top bar and cover art as the centre of every library card
+- Added cover art for the 19 ports that were missing icons, so every port shows its game
+- Moved routine card actions (ROM, Steam, folder, repository, uninstall) into a per-card menu
+- Improved keyboard focus states, text contrast and reduced-motion support
+
 ## 1.3.6
 - Relaxed HarbourMasters asset matching to follow platform names instead of release-specific build prefixes
 

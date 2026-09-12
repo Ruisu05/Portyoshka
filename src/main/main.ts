@@ -21,7 +21,7 @@ const createWindow = () => {
     minWidth: 800,
     minHeight: 560,
     frame: false,
-    backgroundColor: '#090d16',
+    backgroundColor: '#0e0f12',
     title: 'Portyoshka',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

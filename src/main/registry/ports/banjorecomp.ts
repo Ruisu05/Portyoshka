@@ -5,6 +5,7 @@ export const banjoRecomp: PortConfig = {
   displayName: 'Banjo: Recompiled',
   repo: 'BanjoRecomp/BanjoRecomp',
   description: 'A PC port of Banjo-Kazooie',
+  icon: 'assets/icons/banjorecomp.png',
   assetPattern: {
     windows: 'BanjoRecompiled-*-Windows.zip',
     macos: 'BanjoRecompiled-*-macOS.zip',

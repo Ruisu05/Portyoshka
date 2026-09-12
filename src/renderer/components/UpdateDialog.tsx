@@ -59,7 +59,7 @@ export function UpdateDialog() {
                 {selfUpdate.currentVersion} → {selfUpdate.latestVersion}
               </span>
               <button
-                className="btn btn-accent"
+                className="btn btn-primary"
                 disabled={working}
                 onClick={() => void updateSelf()}
               >
@@ -105,12 +105,12 @@ export function UpdateDialog() {
           </label>
         ))}
         <div className="modal-actions">
-          <button className="btn btn-ghost" disabled={working} onClick={() => setUpdateDialogOpen(false)}>
+          <button className="btn btn-quiet" disabled={working} onClick={() => setUpdateDialogOpen(false)}>
             Skip
           </button>
           {updatable.length > 0 && (
             <button
-              className="btn btn-accent"
+              className="btn btn-primary"
               disabled={working || !Object.values(selected).some(Boolean)}
               onClick={() => void updateSelected()}
             >

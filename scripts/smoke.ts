@@ -77,10 +77,11 @@ async function main() {
     '-c',
     `
 import zipfile, sys
-z = zipfile.ZipFile('${evilZip}', 'w')
+z = zipfile.ZipFile(sys.argv[1], 'w')
 z.writestr('../escape.txt', 'pwned')
 z.close()
 `,
+    evilZip,
   ]);
   await expectAppError('rejects traversal entries', 'EXTRACT_FAILED', () =>
     extractZip(evilZip, path.join(evilDir, 'out')),

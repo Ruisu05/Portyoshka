@@ -5,6 +5,7 @@ export const wcwRecomp: PortConfig = {
   displayName: 'WCW vs. nWo World Tour: Recompiled',
   repo: 'jessetbh/WCWvsNWOWorldTourRecomp',
   description: 'A PC port of WCW vs. nWo World Tour',
+  icon: 'assets/icons/wcwrecomp.png',
   assetPattern: {
     windows: 'WCWRecompiled-*-Windows.zip',
   },

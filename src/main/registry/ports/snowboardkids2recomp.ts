@@ -5,6 +5,7 @@ export const snowboardKids2Recomp: PortConfig = {
   displayName: 'Snowboard Kids 2: Recompiled',
   repo: 'cdlewis/snowboardkids2-recomp',
   description: 'A PC port of Snowboard Kids 2',
+  icon: 'assets/icons/snowboardkids2recomp.png',
   assetPattern: {
     windows: 'SnowboardKids2Recompiled-Windows-*.zip',
     macos: 'SnowboardKids2Recompiled-macOS-*.zip',

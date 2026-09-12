@@ -5,6 +5,7 @@ export const bm64Recomp: PortConfig = {
   displayName: 'Bomberman 64: Recompiled',
   repo: 'RevoSucks/BM64Recomp',
   description: 'A PC port of Bomberman 64',
+  icon: 'assets/icons/bm64recomp.png',
   assetPattern: {
     windows: 'BM64Recompiled-Windows-*.zip',
     macos: 'BM64Recompiled-macOS-*.zip',

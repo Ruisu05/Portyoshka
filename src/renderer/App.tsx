@@ -3,12 +3,29 @@ import { useStore } from './store';
 import { LibraryView } from './components/Views';
 import { ModsView } from './components/ModsView';
 import { DownloadsView } from './components/DownloadsView';
-import { TitleBar } from './components/TitleBar';
+import { WindowControls } from './components/TitleBar';
 import { UpdateDialog } from './components/UpdateDialog';
 import { RomPromptDialog } from './components/RomPromptDialog';
 import { SettingsDialog } from './components/SettingsDialog';
 import { UninstallDialog } from './components/UninstallDialog';
 import { Toasts } from './components/Toasts';
+
+function MarkIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2.2"
+    >
+      <path d="M2 17l10 5 10-5M2 12l10 5 10-5M12 2L2 7l10 5 10-5L12 2z" />
+    </svg>
+  );
+}
 
 function LibraryTabIcon() {
   return (
@@ -42,6 +59,34 @@ function DownloadsTabIcon() {
   );
 }
 
+function RefreshIcon({ spinning }: { spinning: boolean }) {
+  return (
+    <svg
+      className={spinning ? 'spin' : undefined}
+      viewBox="0 0 24 24"
+      width="15"
+      height="15"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    >
+      <path d="M21 12a9 9 0 1 1-3-6.7" />
+      <path d="M21 3v5h-5" />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
 export function App() {
   const init = useStore((s) => s.init);
   const view = useStore((s) => s.view);
@@ -50,6 +95,7 @@ export function App() {
   const checkUpdates = useStore((s) => s.checkUpdates);
   const checkingUpdates = useStore((s) => s.checkingUpdates);
   const setSettingsDialogOpen = useStore((s) => s.setSettingsDialogOpen);
+  const setUpdateDialogOpen = useStore((s) => s.setUpdateDialogOpen);
   const updateInfo = useStore((s) => s.updateInfo);
   const selfUpdate = useStore((s) => s.selfUpdate);
   const updateDialogOpen = useStore((s) => s.updateDialogOpen);
@@ -89,47 +135,43 @@ export function App() {
 
   return (
     <div className="app">
-      <TitleBar />
-
-      <header className="header">
+      <header className="topbar">
         <div className="brand">
-          <div className="brand-icon">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2">
-              <path d="M2 17l10 5 10-5M2 12l10 5 10-5M12 2L2 7l10 5 10-5L12 2z" />
-            </svg>
-          </div>
+          <span className="brand-mark">
+            <MarkIcon />
+          </span>
           <span className="brand-name">Portyoshka</span>
-          {settings && <span className="version-pill">v{settings.version}</span>}
+          {settings && <span className="brand-version">v{settings.version}</span>}
         </div>
 
-        <nav className="header-nav">
+        <nav className="tabs" aria-label="Views">
           <button
-            className={`header-tab ${view === 'library' ? 'active' : ''}`}
+            className={`tab ${view === 'library' ? 'active' : ''}`}
             onClick={() => setView('library')}
           >
             <LibraryTabIcon />
-            <span>Library</span>
+            <span className="tab-label">Library</span>
           </button>
           <button
-            className={`header-tab ${view === 'mods' ? 'active' : ''}`}
+            className={`tab ${view === 'mods' ? 'active' : ''}`}
             onClick={() => openMods(null)}
           >
             <ModsTabIcon />
-            <span>Mods &amp; Tools</span>
+            <span className="tab-label">Mods &amp; Tools</span>
           </button>
           <button
-            className={`header-tab ${view === 'downloads' ? 'active' : ''}`}
+            className={`tab ${view === 'downloads' ? 'active' : ''}`}
             onClick={() => setView('downloads')}
           >
             <DownloadsTabIcon />
-            <span>Downloads</span>
-            {activeDownloads > 0 && <span className="tab-badge">{activeDownloads}</span>}
+            <span className="tab-label">Downloads</span>
+            {activeDownloads > 0 && <span className="tab-count">{activeDownloads}</span>}
           </button>
         </nav>
 
-        <div className="header-spacer" />
+        <div className="topbar-spacer" />
 
-        <div className="search-box">
+        <div className="search">
           <svg
             className="search-icon"
             viewBox="0 0 24 24"
@@ -158,42 +200,33 @@ export function App() {
           <span className="search-kbd">Ctrl K</span>
         </div>
 
-        <button
-          className="btn btn-ghost btn-updates"
-          disabled={checkingUpdates}
-          onClick={() => void checkUpdates(true)}
-          title="Check for updates on GitHub"
-        >
-          <svg
-            className={`update-icon ${checkingUpdates ? 'spinning' : ''}`}
-            viewBox="0 0 24 24"
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
+        {updatableCount > 0 ? (
+          <button className="update-chip" onClick={() => setUpdateDialogOpen(true)}>
+            <span className="state-dot" />
+            {updatableCount} update{updatableCount === 1 ? '' : 's'}
+          </button>
+        ) : (
+          <button
+            className="icon-btn topbar-icon"
+            title="Check for updates"
+            aria-label="Check for updates"
+            disabled={checkingUpdates}
+            onClick={() => void checkUpdates(true)}
           >
-            <path d="M21 12a9 9 0 1 1-3-6.7" />
-            <path d="M21 3v5h-5" />
-          </svg>
-          {checkingUpdates ? 'Checking…' : 'Check for updates'}
-          {!checkingUpdates && updatableCount > 0 && (
-            <span className="badge badge-update">{updatableCount}</span>
-          )}
-        </button>
+            <RefreshIcon spinning={checkingUpdates} />
+          </button>
+        )}
+
         <button
-          className="btn btn-ghost btn-settings"
+          className="icon-btn topbar-icon"
           title="Settings"
+          aria-label="Settings"
           onClick={() => setSettingsDialogOpen(true)}
         >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-          <span>Settings</span>
+          <SettingsIcon />
         </button>
+
+        <WindowControls />
       </header>
 
       <main className="main">
@@ -220,7 +253,7 @@ export function App() {
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Rescan Ports
+            Rescan ports
           </button>
         </div>
       </footer>

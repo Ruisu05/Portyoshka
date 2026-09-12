@@ -5,6 +5,7 @@ export const snap64Recomp: PortConfig = {
   displayName: 'Pokemon Snap: Recompiled',
   repo: 'JackandBeans/Snap64Recomp',
   description: 'A PC port of Pokemon Snap',
+  icon: 'assets/icons/snap64recomp.png',
   assetPattern: {
     windows: 'Snap64Recomp-*-win64.zip',
   },

@@ -5,6 +5,7 @@ export const perfectDark: PortConfig = {
   displayName: 'Perfect Dark',
   repo: 'perfect-dark-pc-port/perfect_dark',
   description: 'A PC port of Perfect Dark',
+  icon: 'assets/icons/perfectdark.png',
   assetPattern: {
     windows: 'pd-x86_64-windows.zip',
     linux: 'pd-x86_64-linux.tar.gz',

@@ -5,6 +5,7 @@ export const dk64Recomp: PortConfig = {
   displayName: 'Donkey Kong 64: Recompiled',
   repo: 'Rainchus/Donkey-Kong-64-Recompiled',
   description: 'A PC port of Donkey Kong 64',
+  icon: 'assets/icons/dk64recomp.png',
   assetPattern: {
     windows: 'DK64Recompiled-Windows-Release-*.zip',
     macos: 'DK64Recompiled-macOS-ARM64-Release-*.zip',

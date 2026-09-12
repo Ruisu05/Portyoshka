@@ -5,6 +5,7 @@ export const harvestMoon64Recomp: PortConfig = {
   displayName: 'Harvest Moon 64: Recompiled',
   repo: 'HarvestMoon64Recomp/HarvestMoon64Recomp',
   description: 'A PC port of Harvest Moon 64',
+  icon: 'assets/icons/harvestmoon64recomp.png',
   assetPattern: {
     windows: 'HarvestMoon64Recompiled-*-Windows.zip',
     macos: 'HarvestMoon64Recompiled-*-macOS.zip',

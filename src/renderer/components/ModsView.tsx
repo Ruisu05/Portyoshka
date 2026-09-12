@@ -44,11 +44,13 @@ export function ModsView() {
   if (ports.length === 0 || !entry) {
     return (
       <div className="view">
-        <div className="empty-state">
-          <div className="empty-title">No mods here yet</div>
-          <div className="empty-text">No installed port supports mods. Install a port like Gen1Recomp first.</div>
-          <button className="btn btn-accent btn-lg" onClick={() => setView('library')}>
-            Browse library
+        <div className="empty is-page">
+          <div className="empty-title">No mods to browse yet</div>
+          <div className="empty-text">
+            Mod directories need an installed port that supports them — Gen1Recomp and the HarbourMasters ports do.
+          </div>
+          <button className="btn btn-lg" onClick={() => setView('library')}>
+            Browse the library
           </button>
         </div>
       </div>
@@ -73,7 +75,8 @@ export function ModsView() {
         {ports.map((p) => (
           <button
             key={p.port.id}
-            className={`btn btn-nav ${p.port.id === entry.port.id ? 'active' : ''}`}
+            className={`filter ${p.port.id === entry.port.id ? 'is-active' : ''}`}
+            aria-pressed={p.port.id === entry.port.id}
             onClick={() => setModsPort(p.port.id)}
           >
             {p.port.displayName}
@@ -91,7 +94,7 @@ export function ModsView() {
             onChange={(e) => setQuery(e.target.value)}
           />
           <button
-            className="btn btn-ghost"
+            className="btn btn-quiet"
             disabled={loading || busy}
             title="Refresh the mod list"
             onClick={() => void refreshMods(entry.port.id)}
@@ -122,10 +125,12 @@ export function ModsView() {
 
       {catalog === undefined && loading && <div className="mods-empty">Loading mods…</div>}
       {catalog === undefined && !loading && (
-        <div className="mods-empty">Could not load the mod directory.</div>
+        <div className="mods-empty">The mod directory could not be loaded. Check your connection and try Refresh.</div>
       )}
       {catalog !== undefined && list.length === 0 && (
-        <div className="mods-empty">{query || category ? 'No mods match the filters.' : 'No mods listed.'}</div>
+        <div className="mods-empty">
+          {query || category ? 'No mods match the current filters.' : 'This directory lists no mods yet.'}
+        </div>
       )}
 
       <div className="mods-grid">
@@ -175,26 +180,26 @@ function ModCard({
   let button: React.ReactNode;
   if (installed && update) {
     button = (
-      <button className="btn btn-accent btn-sm" disabled={busy} onClick={onInstall}>
+      <button className="btn btn-primary btn-sm" disabled={busy} onClick={onInstall}>
         Update to {latest}
       </button>
     );
   } else if (installed) {
     button = (
-      <button className="btn btn-ghost btn-sm" disabled={busy} title="Remove this mod" onClick={onUninstall}>
+      <button className="btn btn-quiet btn-sm" disabled={busy} title="Remove this mod" onClick={onUninstall}>
         Remove
       </button>
     );
   } else {
     button = (
-      <button className="btn btn-accent btn-sm" disabled={busy} onClick={onInstall}>
+      <button className="btn btn-primary btn-sm" disabled={busy} onClick={onInstall}>
         Install
       </button>
     );
   }
 
   return (
-    <div className="card mod-card">
+    <div className="mod-card">
       <div className="mod-card-thumb">
         <span className="mod-card-placeholder">{mod.title.replace(/[^a-zA-Z0-9 ]/g, '').split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?'}</span>
         {thumbnail && (
@@ -209,13 +214,13 @@ function ModCard({
           />
         )}
       </div>
-      <div className="card-info">
-        <div className="card-name">
+      <div className="mod-card-body">
+        <div className="mod-name">
           {mod.title}
-          {mod.author && <span className="mod-row-author">by {mod.author}</span>}
+          {mod.author && <span className="mod-author">by {mod.author}</span>}
         </div>
         {mod.categories && mod.categories.length > 0 && (
-          <div className="mod-row-sub">
+          <div className="mod-tags">
             {mod.categories.map((c) => (
               <span key={c} className="badge">
                 {c}
@@ -223,10 +228,10 @@ function ModCard({
             ))}
           </div>
         )}
-        {mod.summary && <div className="card-desc mod-summary">{mod.summary}</div>}
+        {mod.summary && <div className="mod-summary">{mod.summary}</div>}
       </div>
-      <div className="card-actions">
-        {installed && <span className="mod-row-installed">v{(mod.installedVersion ?? '').replace(/^v/, '')}</span>}
+      <div className="mod-card-actions">
+        {installed && <span className="mod-installed-version">v{(mod.installedVersion ?? '').replace(/^v/, '')}</span>}
         <div className="mod-card-spacer" />
         {pageUrl && (
           <button

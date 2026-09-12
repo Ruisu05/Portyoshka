@@ -4,6 +4,8 @@ import { PortCard, PortRow } from './PortCard';
 import { LaunchOutputPanel } from './LaunchOutputPanel';
 import type { LibraryEntry } from '../../shared/types';
 
+type Filter = 'all' | 'installed' | 'not-installed' | 'attention';
+
 function romMissing(entry: LibraryEntry): boolean {
   return entry.port.rom.required && !entry.romStatus.linked;
 }
@@ -31,11 +33,22 @@ function compareVersions(a: string | null | undefined, b: string | null | undefi
 export function LibraryView() {
   const library = useStore((s) => s.library);
   const query = useStore((s) => s.libraryQuery);
+  const setQuery = useStore((s) => s.setLibraryQuery);
   const filter = useStore((s) => s.libraryFilter);
   const setFilter = useStore((s) => s.setLibraryFilter);
   const sort = useStore((s) => s.librarySort);
   const setSort = useStore((s) => s.setLibrarySort);
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
+
+  const counts = useMemo(
+    () => ({
+      all: library.length,
+      installed: library.filter((entry) => entry.installed !== null).length,
+      'not-installed': library.filter((entry) => entry.installed === null).length,
+      attention: library.filter(needsAttention).length,
+    }),
+    [library],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -77,66 +90,57 @@ export function LibraryView() {
   if (library.length === 0) {
     return (
       <div className="view">
-        <div className="empty-state empty-center">
-          <div className="empty-title">No ports available</div>
-          <div className="empty-text">No ports are supported on this platform yet.</div>
+        <div className="empty is-page">
+          <div className="empty-title">No ports here yet</div>
+          <div className="empty-text">
+            Portyoshka has no ports registered for this platform. Check back after a future release.
+          </div>
         </div>
       </div>
     );
   }
 
+  const filterLabels: { id: Filter; label: string }[] = [
+    { id: 'all', label: 'All' },
+    { id: 'installed', label: 'Installed' },
+    { id: 'not-installed', label: 'Not installed' },
+    { id: 'attention', label: 'Needs attention' },
+  ];
+
   return (
     <div className="view">
+      <h1 className="visually-hidden">Library</h1>
       <div className="toolbar">
-        <div className="toolbar-left">
-          <h1 className="view-title">
-            Library
-            <span className="pill-count">{library.length}</span>
-          </h1>
-          <div className="toolbar-sep" />
-          <div className="filter-tabs">
+        <div className="filters" role="group" aria-label="Filter ports">
+          {filterLabels.map(({ id, label }) => (
             <button
-              className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
-              onClick={() => setFilter('all')}
+              key={id}
+              className={`filter ${filter === id ? 'is-active' : ''}`}
+              aria-pressed={filter === id}
+              onClick={() => setFilter(id)}
             >
-              All
+              {label}
+              <span className="filter-count">{counts[id]}</span>
             </button>
-            <button
-              className={`filter-tab ${filter === 'installed' ? 'active' : ''}`}
-              onClick={() => setFilter('installed')}
-            >
-              Installed
-            </button>
-            <button
-              className={`filter-tab ${filter === 'not-installed' ? 'active' : ''}`}
-              onClick={() => setFilter('not-installed')}
-            >
-              Not Installed
-            </button>
-            <button
-              className={`filter-tab ${filter === 'attention' ? 'active' : ''}`}
-              onClick={() => setFilter('attention')}
-            >
-              Needs Attention
-            </button>
-          </div>
+          ))}
         </div>
         <div className="toolbar-right">
-          <span className="sort-label">Sort by:</span>
           <select
             className="sort-select"
             value={sort}
+            aria-label="Sort ports"
             onChange={(e) => setSort(e.target.value as typeof sort)}
           >
-            <option value="recent">Recent Activity</option>
+            <option value="recent">Recent activity</option>
             <option value="title">Title (A-Z)</option>
             <option value="version">Version</option>
-            <option value="playtime">Play Time</option>
+            <option value="playtime">Play time</option>
           </select>
-          <div className="layout-toggle">
+          <div className="seg" role="group" aria-label="Layout">
             <button
-              className={`layout-toggle-btn ${layout === 'grid' ? 'active' : ''}`}
+              className={`seg-btn ${layout === 'grid' ? 'is-active' : ''}`}
               title="Grid view"
+              aria-label="Grid view"
               onClick={() => setLayout('grid')}
             >
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
@@ -144,8 +148,9 @@ export function LibraryView() {
               </svg>
             </button>
             <button
-              className={`layout-toggle-btn ${layout === 'list' ? 'active' : ''}`}
+              className={`seg-btn ${layout === 'list' ? 'is-active' : ''}`}
               title="List view"
+              aria-label="List view"
               onClick={() => setLayout('list')}
             >
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
@@ -157,8 +162,25 @@ export function LibraryView() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="mods-empty">
-          {query ? 'No ports match your search.' : 'No ports match this filter.'}
+        <div className="empty">
+          <div className="empty-title">{query ? 'Nothing matches your search' : 'No ports in this filter'}</div>
+          <div className="empty-text">
+            {query
+              ? `No port, game or description matches “${query.trim()}”.`
+              : 'Every port here is outside this filter right now.'}
+          </div>
+          <button
+            className="btn"
+            onClick={() => {
+              if (query) {
+                setQuery('');
+              } else {
+                setFilter('all');
+              }
+            }}
+          >
+            {query ? 'Clear search' : 'Show all ports'}
+          </button>
         </div>
       )}
 

@@ -5,6 +5,7 @@ export const drMario64: PortConfig = {
   displayName: 'Dr. Mario 64 Recompiled+',
   repo: 'theboy181/drmario64_recomp_plus',
   description: 'A PC port of Dr. Mario 64 with enhancements',
+  icon: 'assets/icons/drmario64.png',
   assetPattern: {
     windows: 'Dr.Mario.64.Recompiled-*-Windows.zip',
   },

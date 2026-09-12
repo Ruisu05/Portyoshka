@@ -52,10 +52,10 @@ export function RomPromptDialog() {
         )}
         <div className="modal-text">Accepted extensions: {port.rom.acceptedExtensions.join(', ')}</div>
         <div className="modal-actions">
-          <button className="btn btn-ghost" disabled={working} onClick={closeRomPrompt}>
+          <button className="btn btn-quiet" disabled={working} onClick={closeRomPrompt}>
             Cancel
           </button>
-          <button className="btn btn-accent" disabled={working} onClick={() => void onPick()}>
+          <button className="btn btn-primary" disabled={working} onClick={() => void onPick()}>
             {working ? 'Validating…' : replacing ? 'Choose different ROM…' : 'Choose ROM file…'}
           </button>
         </div>

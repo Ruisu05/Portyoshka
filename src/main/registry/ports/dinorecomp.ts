@@ -5,6 +5,7 @@ export const dinoRecomp: PortConfig = {
   displayName: 'Dinosaur Planet: Recompiled',
   repo: 'DinosaurPlanetRecomp/dino-recomp',
   description: 'A PC port of the Dinosaur Planet prototype',
+  icon: 'assets/icons/dinorecomp.png',
   assetPattern: {
     windows: 'DinosaurPlanetRecompiled-*-Windows-x64.zip',
     linux: 'DinosaurPlanetRecompiled-*-Linux-x64.tar.gz',

@@ -5,6 +5,7 @@ export const zeldaAlttpRecomp: PortConfig = {
   displayName: 'The Legend of Zelda: A Link to the Past Recompiled',
   repo: 'mstan/ZeldaAlttPSNESRecomp',
   description: 'A PC port of The Legend of Zelda: A Link to the Past',
+  icon: 'assets/icons/zeldaalttprecomp.png',
   assetPattern: {
     windows: 'ZeldaALttPSNESRecomp-windows-x64-v*.zip',
     linux: 'ZeldaALttPSNESRecomp-linux-*-x86_64.AppImage',

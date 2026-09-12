@@ -5,6 +5,7 @@ export const bmHeroRecomp: PortConfig = {
   displayName: 'Bomberman Hero: Recompiled',
   repo: 'RevoSucks/BMHeroRecomp',
   description: 'A PC port of Bomberman Hero',
+  icon: 'assets/icons/bmherorecomp.png',
   assetPattern: {
     windows: 'BMHeroRecompiled-Windows-*.zip',
     macos: 'BMHeroRecompiled-macOS-*.zip',

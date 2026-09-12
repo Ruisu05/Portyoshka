@@ -5,6 +5,7 @@ export const zelda64Recomp: PortConfig = {
   displayName: 'Zelda 64: Recompiled',
   repo: 'Zelda64Recomp/Zelda64Recomp',
   description: 'A PC port of Majora\u2019s Mask',
+  icon: 'assets/icons/zelda64recomp.png',
   assetPattern: {
     windows: 'Zelda64Recompiled-*-Windows.zip',
     macos: 'Zelda64Recompiled-*-macOS.zip',

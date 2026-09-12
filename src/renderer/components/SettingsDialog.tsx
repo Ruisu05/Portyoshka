@@ -42,7 +42,7 @@ export function SettingsDialog() {
           <span className="settings-label">Install directory</span>
           <div className="settings-input-group">
             <input className="input" value={rootDir} onChange={(e) => setRootDir(e.target.value)} />
-            <button className="btn btn-ghost" onClick={() => void browse()}>
+            <button className="btn btn-quiet" onClick={() => void browse()}>
               Browse…
             </button>
           </div>
@@ -69,11 +69,11 @@ export function SettingsDialog() {
                   <span className="settings-override-path">
                     {settings?.portDirOverrides[l.port.id] ?? l.installed!.installPath}
                   </span>
-                  <button className="btn btn-ghost" onClick={() => void changePortDir(l.port.id)}>
+                  <button className="btn btn-quiet" onClick={() => void changePortDir(l.port.id)}>
                     Change…
                   </button>
                   {settings?.portDirOverrides[l.port.id] && (
-                    <button className="btn btn-ghost" onClick={() => void setPortDirOverride(l.port.id, null)}>
+                    <button className="btn btn-quiet" onClick={() => void setPortDirOverride(l.port.id, null)}>
                       Reset
                     </button>
                   )}
@@ -88,7 +88,7 @@ export function SettingsDialog() {
           <span className="version-hint" style={{ marginRight: 'auto', color: 'var(--text-dim)' }}>
             Portyoshka v{settings?.version ?? '…'}
           </span>
-          <button className="btn btn-ghost" onClick={() => setSettingsDialogOpen(false)}>
+          <button className="btn btn-quiet" onClick={() => setSettingsDialogOpen(false)}>
             Close
           </button>
           <button className="btn btn-primary" onClick={() => void save()}>

@@ -30,10 +30,10 @@ export function UninstallDialog() {
           Settings, saves and mods can be kept as a backup in Portyoshka&apos;s app data folder.
         </div>
         <div className="modal-actions modal-actions-wrap">
-          <button className="btn btn-ghost" disabled={working} onClick={closeUninstallPrompt}>
+          <button className="btn btn-quiet" disabled={working} onClick={closeUninstallPrompt}>
             Cancel
           </button>
-          <button className="btn btn-ghost" disabled={working} onClick={() => void doUninstall(true)}>
+          <button className="btn btn-quiet" disabled={working} onClick={() => void doUninstall(true)}>
             Uninstall, keep settings
           </button>
           <button className="btn btn-danger" disabled={working} onClick={() => void doUninstall(false)}>

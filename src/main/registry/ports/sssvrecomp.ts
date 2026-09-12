@@ -5,6 +5,7 @@ export const sssvRecomp: PortConfig = {
   displayName: 'Space Station Silicon Valley: Recompiled',
   repo: 'Cellenseres/SSSV_Recomp',
   description: 'A PC port of Space Station Silicon Valley',
+  icon: 'assets/icons/sssvrecomp.png',
   assetPattern: {
     windows: 'SSSVRecompiled_*_Windows.zip',
     macos: 'SSSVRecompiled_*_macOS.zip',

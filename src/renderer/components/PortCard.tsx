@@ -1,6 +1,10 @@
+import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { LibraryEntry } from '../../shared/types';
 import { useStore } from '../store';
 import { iconUrl } from '../icons';
+
+type StateTone = 'none' | 'ready' | 'run' | 'warn' | 'idle';
 
 function initials(name: string): string {
   const words = name.replace(/[^a-zA-Z0-9 ]/g, '').split(/\s+/).filter(Boolean);
@@ -29,7 +33,16 @@ function displayVersion(version: string): string {
   return `v${version.replace(/^v/, '')}`;
 }
 
-export function PlayIcon({ size = 12 }: { size?: number }) {
+function entryState(entry: LibraryEntry): { tone: StateTone; label: string } {
+  if (entry.running) return { tone: 'run', label: 'Running' };
+  if (!entry.installed) return { tone: 'none', label: 'Not installed' };
+  if (romMissing(entry)) return { tone: 'warn', label: 'ROM not attached' };
+  if (entry.romStatus.unverified) return { tone: 'idle', label: 'ROM unverified' };
+  if (entry.updateAvailable) return { tone: 'warn', label: 'Update available' };
+  return { tone: 'ready', label: 'Ready' };
+}
+
+function PlayIcon({ size = 12 }: { size?: number }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
       <path d="M5 3l14 9-14 9V3z" />
@@ -37,19 +50,20 @@ export function PlayIcon({ size = 12 }: { size?: number }) {
   );
 }
 
-function ClockIcon({ size = 10 }: { size?: number }) {
+function StateLine({ entry }: { entry: LibraryEntry }) {
+  const state = entryState(entry);
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
+    <>
+      <span className={`state-dot tone-${state.tone} ${state.tone === 'run' ? 'is-live' : ''}`} />
+      <span className={`state-label tone-${state.tone}`}>{state.label}</span>
+    </>
   );
 }
 
-function LinkIcon() {
+function GitHubIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
     </svg>
   );
 }
@@ -62,18 +76,28 @@ function FolderIcon() {
   );
 }
 
-function GitHubIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
-      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
-    </svg>
-  );
-}
-
 function TrashIcon() {
   return (
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14zM10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
+function DotsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+      <circle cx="5" cy="12" r="1.7" />
+      <circle cx="12" cy="12" r="1.7" />
+      <circle cx="19" cy="12" r="1.7" />
+    </svg>
+  );
+}
+
+function LinkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -86,7 +110,7 @@ function SteamIcon({ remove }: { remove?: boolean }) {
       </svg>
       {remove && (
         <svg className="steam-icon-x" viewBox="0 0 10 10" width="9" height="9">
-          <path d="M1 1l8 8M9 1l-8 8" stroke="#e5484d" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <path d="M1 1l8 8M9 1l-8 8" stroke="#d7524d" strokeWidth="2.5" strokeLinecap="round" fill="none" />
         </svg>
       )}
     </span>
@@ -95,7 +119,7 @@ function SteamIcon({ remove }: { remove?: boolean }) {
 
 export interface PrimaryAction {
   label: string;
-  kind: 'primary' | 'accent' | 'danger';
+  kind: 'primary' | 'danger';
   onClick: () => void;
 }
 
@@ -116,12 +140,12 @@ export function usePrimaryAction(entry: LibraryEntry): PrimaryAction {
     return { label: 'Cancel', kind: 'danger', onClick: () => void cancelInstall(entry.port.id) };
   }
   if (!entry.installed) {
-    return { label: 'Install', kind: 'accent', onClick: () => void install(entry.port.id) };
+    return { label: 'Install', kind: 'primary', onClick: () => void install(entry.port.id) };
   }
   if (entry.updateAvailable) {
     return {
       label: `Update to ${entry.latestVersion ?? ''}`,
-      kind: 'accent',
+      kind: 'primary',
       onClick: () => void install(entry.port.id),
     };
   }
@@ -164,63 +188,14 @@ export function ProgressBlock({ entry }: { entry: LibraryEntry }) {
   );
 }
 
-export function StatusPill({ entry }: { entry: LibraryEntry }) {
-  if (!entry.installed) {
-    return (
-      <span className="status-pill status-neutral">
-        <span className="status-dot" />
-        Not installed
-      </span>
-    );
-  }
-  if (entry.running) {
-    return (
-      <span className="status-pill status-running">
-        <span className="status-dot" />
-        Running
-      </span>
-    );
-  }
-  if (romMissing(entry)) {
-    return (
-      <span className="status-pill status-warn">
-        <span className="status-dot" />
-        ROM not attached
-      </span>
-    );
-  }
-  if (entry.romStatus.unverified) {
-    return (
-      <span className="status-pill status-neutral" title="No published hash list for this port yet">
-        <span className="status-dot" />
-        ROM unverified
-      </span>
-    );
-  }
-  if (entry.updateAvailable) {
-    return (
-      <span className="status-pill status-update">
-        <span className="status-dot" />
-        Update available
-      </span>
-    );
-  }
-  return (
-    <span className="status-pill status-ready">
-      <span className="status-dot" />
-      Ready
-    </span>
-  );
-}
-
-export function PortIconActions({ entry }: { entry: LibraryEntry }) {
+function RowIconActions({ entry }: { entry: LibraryEntry }) {
   const showFolder = useStore((s) => s.showFolder);
   const openRepo = useStore((s) => s.openRepo);
   const addToSteam = useStore((s) => s.addToSteam);
   const openUninstallPrompt = useStore((s) => s.openUninstallPrompt);
 
   const repoButton = (
-    <button className="icon-btn" title="GitHub repository" onClick={() => void openRepo(entry.port.id)}>
+    <button className="icon-btn icon-btn-sm" title="GitHub repository" onClick={() => void openRepo(entry.port.id)}>
       <GitHubIcon />
     </button>
   );
@@ -230,11 +205,11 @@ export function PortIconActions({ entry }: { entry: LibraryEntry }) {
   return (
     <>
       {repoButton}
-      <button className="icon-btn" title="Open game directory" onClick={() => void showFolder(entry.port.id)}>
+      <button className="icon-btn icon-btn-sm" title="Open game directory" onClick={() => void showFolder(entry.port.id)}>
         <FolderIcon />
       </button>
       <button
-        className="icon-btn"
+        className="icon-btn icon-btn-sm"
         title={entry.inSteam ? 'Remove from Steam' : 'Add Steam shortcut'}
         onClick={() => void addToSteam(entry.port.id)}
       >
@@ -242,7 +217,7 @@ export function PortIconActions({ entry }: { entry: LibraryEntry }) {
       </button>
       {!entry.running && (
         <button
-          className="icon-btn icon-btn-danger"
+          className="icon-btn icon-btn-sm is-danger"
           title="Uninstall"
           onClick={() => openUninstallPrompt(entry.port.id)}
         >
@@ -253,11 +228,130 @@ export function PortIconActions({ entry }: { entry: LibraryEntry }) {
   );
 }
 
-function PortIcon({ entry, small }: { entry: LibraryEntry; small?: boolean }) {
+function PortArt({ entry, small }: { entry: LibraryEntry; small?: boolean }) {
   const icon = iconUrl(entry.port.icon);
+  if (small) {
+    return (
+      <div className="row-art">
+        {icon ? <img className="row-img" src={icon} alt="" /> : <span className="row-initials">{initials(entry.port.displayName)}</span>}
+      </div>
+    );
+  }
   return (
-    <div className={`icon-tile ${small ? 'icon-tile-sm' : ''}`}>
-      {icon ? <img className="icon-img" src={icon} alt="" /> : initials(entry.port.displayName)}
+    <div className="plate-art">
+      {icon ? <img className="plate-img" src={icon} alt="" /> : <span className="plate-initials">{initials(entry.port.displayName)}</span>}
+    </div>
+  );
+}
+
+function CardMenu({ entry }: { entry: LibraryEntry }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const showFolder = useStore((s) => s.showFolder);
+  const openRepo = useStore((s) => s.openRepo);
+  const addToSteam = useStore((s) => s.addToSteam);
+  const openUninstallPrompt = useStore((s) => s.openUninstallPrompt);
+  const openRomPrompt = useStore((s) => s.openRomPrompt);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const item = (label: string, icon: ReactNode, onClick: () => void, danger = false) => (
+    <button
+      className={`menu-item ${danger ? 'is-danger' : ''}`}
+      role="menuitem"
+      onClick={() => {
+        setOpen(false);
+        onClick();
+      }}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+
+  const installed = entry.installed !== null;
+  const missing = romMissing(entry);
+
+  return (
+    <div className="menu" ref={ref}>
+      <button
+        className="icon-btn"
+        title="More actions"
+        aria-label="More actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        <DotsIcon />
+      </button>
+      {open && (
+        <div className="menu-pop" role="menu">
+          {installed &&
+            !missing &&
+            entry.port.rom.required &&
+            item('Change ROM', <LinkIcon />, () => openRomPrompt(entry.port.id, false))}
+          {item('Open repository', <GitHubIcon />, () => void openRepo(entry.port.id))}
+          {installed && item('Open game folder', <FolderIcon />, () => void showFolder(entry.port.id))}
+          {installed &&
+            item(
+              entry.inSteam ? 'Remove Steam shortcut' : 'Add Steam shortcut',
+              <SteamIcon remove={entry.inSteam} />,
+              () => void addToSteam(entry.port.id),
+            )}
+          {installed &&
+            !entry.running &&
+            item('Uninstall', <TrashIcon />, () => openUninstallPrompt(entry.port.id), true)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CardTools({ entry, busy }: { entry: LibraryEntry; busy: boolean }) {
+  const toggleLog = useStore((s) => s.toggleLog);
+  const visibleLogs = useStore((s) => s.visibleLogs);
+  const openMods = useStore((s) => s.openMods);
+  const openRomPrompt = useStore((s) => s.openRomPrompt);
+  const missing = romMissing(entry);
+  const installed = entry.installed !== null;
+
+  return (
+    <div className="plate-tools">
+      {installed && !busy && !entry.port.noOutput && (
+        <button className="btn btn-quiet" onClick={() => toggleLog(entry.port.id)}>
+          {visibleLogs[entry.port.id] ? 'Hide output' : 'Output'}
+        </button>
+      )}
+      {installed && !busy && entry.port.mods && (
+        <button className="btn btn-quiet" onClick={() => openMods(entry.port.id)}>
+          Mods
+        </button>
+      )}
+      {installed && !busy && !entry.running && missing && (
+        <button
+          className="btn btn-quiet"
+          onClick={() => openRomPrompt(entry.port.id, false)}
+          title="This port needs a ROM before it can run"
+        >
+          Attach ROM
+        </button>
+      )}
+      <span className="plate-tools-spacer" />
+      <CardMenu entry={entry} />
     </div>
   );
 }
@@ -265,84 +359,34 @@ function PortIcon({ entry, small }: { entry: LibraryEntry; small?: boolean }) {
 export function PortCard({ entry }: { entry: LibraryEntry }) {
   const primary = usePrimaryAction(entry);
   const { busy } = useInstallProgress(entry);
-  const toggleLog = useStore((s) => s.toggleLog);
-  const visibleLogs = useStore((s) => s.visibleLogs);
-  const openMods = useStore((s) => s.openMods);
-  const openRomPrompt = useStore((s) => s.openRomPrompt);
-  const missing = romMissing(entry);
-  const running = entry.running;
-  const installed = entry.installed !== null;
+  const state = entryState(entry);
 
   return (
-    <div className="card port-card">
-      <div className="card-top">
-        <PortIcon entry={entry} />
-        <div className="card-info">
-          <div className="card-name-row">
-            <div className="card-name">{entry.port.displayName}</div>
-            <StatusPill entry={entry} />
-          </div>
-          {entry.port.description && <div className="card-desc">{entry.port.description}</div>}
-          <div className="card-meta">
-            {entry.installed && <span className="pill pill-version">{displayVersion(entry.installed.version)}</span>}
-            {entry.playtimeMs > 0 && (
-              <span
-                className="pill"
-                title={
-                  entry.lastPlayedAt > 0
-                    ? `Last played ${new Date(entry.lastPlayedAt).toLocaleString()}`
-                    : undefined
-                }
-              >
-                <ClockIcon />
-                {formatPlaytime(entry.playtimeMs)} played
-              </span>
-            )}
-            {entry.installed && entry.playtimeMs === 0 && (
-              <span className="pill pill-dim">Not played yet</span>
-            )}
-          </div>
+    <article className={`plate ${state.tone === 'run' ? 'is-running' : ''}`}>
+      <PortArt entry={entry} />
+      <div className="plate-body">
+        <h3 className="plate-title" title={entry.port.displayName}>
+          {entry.port.displayName}
+        </h3>
+        <div className="plate-state">
+          <StateLine entry={entry} />
+          {entry.installed && <span className="plate-meta">{displayVersion(entry.installed.version)}</span>}
+          {entry.playtimeMs > 0 && <span className="plate-meta">{formatPlaytime(entry.playtimeMs)}</span>}
         </div>
       </div>
 
-      <ProgressBlock entry={entry} />
+      <div className="plate-progress">
+        <ProgressBlock entry={entry} />
+      </div>
 
-      <div className="card-actions port-actions">
-        <button className={`btn btn-${primary.kind}`} onClick={primary.onClick}>
+      <div className="plate-actions">
+        <button className={`btn btn-block btn-${primary.kind}`} onClick={primary.onClick}>
           {primary.kind === 'primary' && <PlayIcon />}
           {primary.label}
         </button>
-        {installed && !busy && !entry.port.noOutput && (
-          <button className="btn btn-ghost" onClick={() => toggleLog(entry.port.id)}>
-            {visibleLogs[entry.port.id] ? 'Hide output' : 'Output'}
-          </button>
-        )}
-        {installed && !busy && entry.port.mods && (
-          <button className="btn btn-ghost" onClick={() => openMods(entry.port.id)}>
-            Mods
-          </button>
-        )}
-        {missing && installed && !busy && !running ? (
-          <button className="btn btn-ghost btn-rom" onClick={() => openRomPrompt(entry.port.id, false)}>
-            <LinkIcon />
-            Attach ROM
-          </button>
-        ) : (
-          !missing && entry.port.rom.required && installed && !busy && !running && (
-            <button
-              className="btn btn-ghost"
-              title={`Current ROM: ${entry.romStatus.rom?.sourcePath ?? ''}`}
-              onClick={() => openRomPrompt(entry.port.id, false)}
-            >
-              Change ROM
-            </button>
-          )
-        )}
-        <div className="card-icon-actions">
-          <PortIconActions entry={entry} />
-        </div>
+        <CardTools entry={entry} busy={busy} />
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -350,28 +394,25 @@ export function PortRow({ entry }: { entry: LibraryEntry }) {
   const primary = usePrimaryAction(entry);
 
   return (
-    <div className="port-row">
-      <PortIcon entry={entry} small />
-      <div className="port-row-main">
-        <div className="card-name">{entry.port.displayName}</div>
-        {entry.port.description && <div className="card-desc">{entry.port.description}</div>}
+    <div className="row">
+      <PortArt entry={entry} small />
+      <div className="row-main">
+        <div className="row-title">{entry.port.displayName}</div>
+        {entry.port.description && <div className="row-desc">{entry.port.description}</div>}
       </div>
-      <StatusPill entry={entry} />
-      <div className="port-row-meta">
-        {entry.installed && <span className="pill pill-version">{displayVersion(entry.installed.version)}</span>}
-        {entry.playtimeMs > 0 && (
-          <span className="pill">
-            <ClockIcon />
-            {formatPlaytime(entry.playtimeMs)}
-          </span>
-        )}
+      <div className="row-state">
+        <StateLine entry={entry} />
       </div>
-      <div className="port-row-actions">
+      <div className="row-meta">
+        {entry.installed && <span>{displayVersion(entry.installed.version)}</span>}
+        {entry.playtimeMs > 0 && <span>{formatPlaytime(entry.playtimeMs)}</span>}
+      </div>
+      <div className="row-actions">
         <button className={`btn btn-sm btn-${primary.kind}`} onClick={primary.onClick}>
           {primary.label}
         </button>
-        <div className="card-icon-actions">
-          <PortIconActions entry={entry} />
+        <div className="row-tools">
+          <RowIconActions entry={entry} />
         </div>
       </div>
     </div>

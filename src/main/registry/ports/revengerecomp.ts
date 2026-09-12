@@ -5,6 +5,7 @@ export const revengeRecomp: PortConfig = {
   displayName: 'WCW/nWo Revenge: Recompiled',
   repo: 'jessetbh/WCWnWoRevengeRecomp',
   description: 'A PC port of WCW/nWo Revenge',
+  icon: 'assets/icons/revengerecomp.png',
   assetPattern: {
     windows: 'RevengeRecompiled-*-Windows.zip',
   },

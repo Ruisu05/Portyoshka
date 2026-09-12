@@ -6,6 +6,7 @@ export const extremeGRecomp: PortConfig = {
   repo: 'sonicdcer/ExtremeGRecomp',
   repoHost: 'gitlab',
   description: 'A PC port of Extreme-G',
+  icon: 'assets/icons/extremegrecomp.png',
   assetPattern: {
     windows: 'ExtremeGRecompiled-*-Windows-*',
     macos: 'ExtremeGRecompiled-*-macOS-*',
